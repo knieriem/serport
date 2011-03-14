@@ -3,12 +3,12 @@
 *	__sercom__
 
 	Access to serial ports on Linux and Windows. A port may
-	also be served and dialed to via [*9P*](http://plan9.bell-labs.com/sys/man/5/INDEX.html).
+	also be served and dialed to via [*9P*][9P].
 
 
 *	__go9p__
 
-	Utility functions and types for [go9p](http://code.google.com/p/go9p/)
+	Utility functions and types for [go9p][]
 
 
 *	__registry__
@@ -23,17 +23,20 @@
 
 	The make use of the `mksyscall*.sh` scripts from `$GOROOT/src/pkg/syscall`.
 
+[9P]: http://plan9.bell-labs.com/sys/man/5/INDEX.html
+[go9p]: http://code.google.com/p/go9p/
+[hg-git]: http://hg-git.github.com/
 
 ## Installation
 
-Since `goinstall` can not cope with GOOS depended source files yet, the following
-commands should work to install and build the packages:
+Since `goinstall` cannot cope with GOOS dependent source files yet, the following
+commands can be used instead to install and build the packages:
 
 	cd $GOROOT/src/pkg
 	mkdir -p github.com/knieriem
 	cd github.com/knieriem
 
-Clone repository using Mercurial:
+Clone repository using Mercurial (utilizing the [hg-git][] extension):
 
 	hg clone git://github.com/knieriem/g
 
