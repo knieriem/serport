@@ -25,6 +25,7 @@ func main() {
 
 	flag.Parse()
 	log.SetFlags(log.Lshortfile)
+	cherr = make(chan os.Error)
 
 	sercom.Debug = *debug
 	sercom.Debugall = *debugall
@@ -51,27 +52,35 @@ func main() {
 		go copyproc(os.Stdout, port)
 	}
 
-	sig := <- signal.Incoming
-	log.Println(sig)
+	select {
+	case err = <- cherr:
+		if err != os.EOF {
+			log.Println(err)
+		}
+	case sig := <- signal.Incoming:
+		log.Println(sig)
+	}
 	port.Close()
 }
 
+var cherr chan os.Error
+
 func copyproc(to io.Writer, from io.Reader) {
-	var buf = make([]byte, 1024)
+	var (
+		buf = make([]byte, 1024)
+		err os.Error
+		n int
+	)
 
 	for {
-		n, err := from.Read(buf)
-		if err != nil {
-			if err != os.EOF {
-				log.Fatalf("read: %s\n", err)
-			}
-			os.Exit(0)
+		if n, err = from.Read(buf); err != nil {
+			break
 		}
 		if n > 0 {
-			n, err = to.Write(buf[:n])
-			if err != nil {
-				log.Fatalf("write: %s\n", err)
+			if _, err = to.Write(buf[:n]); err != nil {
+				break
 			}
 		}
 	}
+	cherr <- err
 }
