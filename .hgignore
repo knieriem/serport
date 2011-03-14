@@ -1,0 +1,12 @@
+syntax: glob
+
+[68].*
+*.o
+*.[68]
+*.exe
+
+_obj
+_cgo_export.h
+
+doc.html
++*

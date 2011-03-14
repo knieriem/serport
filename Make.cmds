@@ -1,0 +1,26 @@
+# Copyright 2009 The Go Authors.  All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+SFX=
+ifeq ($(GOOS),windows)
+SFX:=.exe
+TARG:= $(foreach t,$(TARG),$(t)$(SFX))
+endif
+
+all: $(TARG)
+
+include $(QUOTED_GOROOT)/src/Make.common
+
+PREREQ+=$(patsubst %,%.make,$(DEPS))
+
+%$(SFX): %.$O
+	$(LD) -o $@ $<
+
+%.$O: %.go $(PREREQ)
+	$(GC) -o $@ $<
+
+CLEANFILES+=$(TARG)
+
+importpath:
+	echo main
