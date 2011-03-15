@@ -8,9 +8,9 @@ import (
 )
 
 type dev9 struct {
-	clnt *p.Clnt
-	data io.ReadWriteCloser
-	ctl	io.WriteCloser
+	clnt      *p.Clnt
+	data      io.ReadWriteCloser
+	ctl       io.WriteCloser
 	recording bool
 }
 
@@ -115,7 +115,7 @@ func (d *dev9) SetParity(parity byte) os.Error {
 }
 
 func (d *dev9) SetStopbits(n int) (err os.Error) {
-	if n==1 || n==2 {
+	if n == 1 || n == 2 {
 		return d.cmdi('s', n)
 	}
 	return os.NewError("invalid number of stopbits")
@@ -148,5 +148,5 @@ func (d *dev9) cmdbool(c byte, on bool) (err os.Error) {
 }
 
 func (d *dev9) cmdi(c byte, val int) (err os.Error) {
-	return d.cmd(string(c)+strconv.Itoa(val))
+	return d.cmd(string(c) + strconv.Itoa(val))
 }

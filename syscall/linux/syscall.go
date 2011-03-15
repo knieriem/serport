@@ -6,7 +6,7 @@ package syscall
 //sys	IoctlModem(fd int, action int, flags *Int) (errno int) = SYS_IOCTL
 
 func (t *Termios) SetInSpeed(s int) {
-//	t.Iflag = t.Iflag&^CBAUD | uint32(s)&CBAUD
+	//	t.Iflag = t.Iflag&^CBAUD | uint32(s)&CBAUD
 }
 func (t *Termios) SetOutSpeed(s int) {
 	t.Cflag = t.Cflag&^CBAUD | uint32(s)&CBAUD

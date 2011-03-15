@@ -8,7 +8,7 @@ import (
 
 type user struct {
 	name string
-	id	int
+	id   int
 }
 
 func CurrentUser() p.User {

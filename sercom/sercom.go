@@ -10,22 +10,22 @@ import (
 )
 
 type Port interface {
-	Ctl(cmds ...string) os.Error	// accepts commands similar to Plan 9's eia#ctl
+	Ctl(cmds ...string) os.Error // accepts commands similar to Plan 9's eia#ctl
 
 	SetBaudrate(int) os.Error
-	SetParity(byte) os.Error	// odd: 'o', even: 'e', otherwise none
-	SetWordlen(int) os.Error	// 5, 6, 7, or 8
-	SetStopbits(int) os.Error	// 1 or 2
+	SetParity(byte) os.Error  // odd: 'o', even: 'e', otherwise none
+	SetWordlen(int) os.Error  // 5, 6, 7, or 8
+	SetStopbits(int) os.Error // 1 or 2
 
 	SetDtr(bool) os.Error
 	SetRts(bool) os.Error
-	SetRtsCts(bool) os.Error	// obey Cts signal, set Rts depending of internal buffer's state
+	SetRtsCts(bool) os.Error // obey Cts signal, set Rts depending of internal buffer's state
 
 	Delay(ms int)
 
 	// If the Port is remote, after calling Record() the execution of
 	// commands will be delayed until Commit() is called.
-	Record()	
+	Record()
 	Commit()
 
 	Drain() os.Error
@@ -59,7 +59,7 @@ func (d *dev) Ctl(cmds ...string) os.Error {
 			case 1:
 				cmd = f[0]
 			}
-//fmt.Printf("Ctl: %c %d\n", cmd, n)
+			//fmt.Printf("Ctl: %c %d\n", cmd, n)
 			switch cmd {
 			case 'd':
 				d.SetDtr(n == 1)

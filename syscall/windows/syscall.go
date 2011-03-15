@@ -92,7 +92,7 @@ type HKEY uintptr
 func GetUserName() string {
 	var (
 		buf = make([]uint16, 128)
-		sz = uint32(len(buf))
+		sz  = uint32(len(buf))
 	)
 	if e := getUserName(&buf[0], &sz); e != 0 {
 		return "none"

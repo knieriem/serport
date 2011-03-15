@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	OREAD	= p.OREAD
-	OWRITE	= p.OWRITE
-	ORDWR = p.ORDWR
-	OEXEC = p.OEXEC
-	OTRUNC = p.OTRUNC
-	OCEXEC = p.OCEXEC
+	OREAD   = p.OREAD
+	OWRITE  = p.OWRITE
+	ORDWR   = p.ORDWR
+	OEXEC   = p.OEXEC
+	OTRUNC  = p.OTRUNC
+	OCEXEC  = p.OCEXEC
 	ORCLOSE = p.ORCLOSE
 )
 

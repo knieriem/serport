@@ -270,7 +270,6 @@ func (d *dev) ModemLines() LineState {
 }
 
 
-
 // Get a list of (probably) present serial devices
 func DeviceList() (list []string) {
 	key, err := registry.KeyLocalMachine.Subkey("HARDWARE", "DEVICEMAP", "SERIALCOMM")

@@ -20,10 +20,10 @@ type ctl struct {
 }
 type data struct {
 	srv.File
-	dev Port
+	dev     Port
 	clunked bool
-	tmp	[]byte
-	ch	chan int
+	tmp     []byte
+	ch      chan int
 }
 
 func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
@@ -68,7 +68,7 @@ func (d *data) lock() {
 	d.ch <- 1
 }
 func (d *data) unlock() {
-	<- d.ch
+	<-d.ch
 }
 
 // Serve a previously opened serial device via 9P.
