@@ -11,6 +11,14 @@
 	Utility functions and types for [go9p][]
 
 
+*	__strings__
+
+	Contains `Tokenize`, an implementation of an
+	equally named [function of Plan 9's libc][tokenize],
+	which i miss from Go's string package (similar to
+	`string.Fields`, but with interpretation of single
+	quotes).
+
 *	__registry__
 
 	Access to Windows' registry database (still read-only). 
@@ -26,6 +34,8 @@
 [9P]: http://plan9.bell-labs.com/sys/man/5/INDEX.html
 [go9p]: http://code.google.com/p/go9p/
 [hg-git]: http://hg-git.github.com/
+[tokenize]: http://plan9.bell-labs.com/magic/man2html/2/getfields
+
 
 ## Installation
 
