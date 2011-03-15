@@ -10,7 +10,7 @@ import (
 )
 
 type Port interface {
-	Ctl(cmds string) os.Error	// accepts commands similar to Plan 9's eia#ctl
+	Ctl(cmds ...string) os.Error	// accepts commands similar to Plan 9's eia#ctl
 
 	SetBaudrate(int) os.Error
 	SetParity(byte) os.Error	// odd: 'o', even: 'e', otherwise none
@@ -42,43 +42,45 @@ type dev struct {
 	hw
 }
 
-func (d *dev) Ctl(cmds string) os.Error {
+func (d *dev) Ctl(cmds ...string) os.Error {
 	d.inCtl = true
 
-	for _, f := range strings.Fields(cmds) {
-		var n int
-		var c byte
-		var cmd byte
+	for _, s := range cmds {
+		for _, f := range strings.Fields(s) {
+			var n int
+			var c byte
+			var cmd byte
 
-		switch len(f) {
-		default:
-			n, _ = strconv.Atoi(f[1:])
-			c = f[1]
-			fallthrough
-		case 1:
-			cmd = f[0]
-		}
-fmt.Printf("Ctl: %c %d\n", cmd, n)
-		switch cmd {
-		case 'd':
-			d.SetDtr(n == 1)
-		case 'r':
-			d.SetRts(n == 1)
-		case 'm':
-			d.SetRtsCts(n != 0)
-		case 'D':
-			d.inCtl = false
-			d.updateCtl()
-			d.inCtl = true
-			d.Delay(n)
-		case 'b':
-			d.SetBaudrate(n)
-		case 'l':
-			d.SetWordlen(n)
-		case 'p':
-			d.SetParity(c)
-		case 's':
-			d.SetStopbits(n)
+			switch len(f) {
+			default:
+				n, _ = strconv.Atoi(f[1:])
+				c = f[1]
+				fallthrough
+			case 1:
+				cmd = f[0]
+			}
+//fmt.Printf("Ctl: %c %d\n", cmd, n)
+			switch cmd {
+			case 'd':
+				d.SetDtr(n == 1)
+			case 'r':
+				d.SetRts(n == 1)
+			case 'm':
+				d.SetRtsCts(n != 0)
+			case 'D':
+				d.inCtl = false
+				d.updateCtl()
+				d.inCtl = true
+				d.Delay(n)
+			case 'b':
+				d.SetBaudrate(n)
+			case 'l':
+				d.SetWordlen(n)
+			case 'p':
+				d.SetParity(c)
+			case 's':
+				d.SetStopbits(n)
+			}
 		}
 	}
 	d.inCtl = false

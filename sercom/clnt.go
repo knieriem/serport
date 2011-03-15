@@ -93,8 +93,13 @@ func (d *dev9) Commit() {
 	d.recording = false
 }
 
-func (d *dev9) Ctl(cmd string) os.Error {
-	return d.cmd(cmd)
+func (d *dev9) Ctl(cmds ...string) (err os.Error) {
+	for _, s := range cmds {
+		if err = d.cmd(s); err != nil {
+			break
+		}
+	}
+	return
 }
 
 func (d *dev9) SetBaudrate(val int) (err os.Error) {

@@ -39,7 +39,7 @@ func Open(file string, inictl string) (p Port, err os.Error) {
 	d.fd = uint32(fd)
 	d.name = file
 
-	if err = d.Ctl(initDefault + " " + inictl); err != nil {
+	if err = d.Ctl(initDefault, inictl); err != nil {
 		return
 	}
 	d.initDone = true

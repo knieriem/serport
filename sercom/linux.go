@@ -55,7 +55,7 @@ func Open(filename string, inictl string) (port Port, err os.Error) {
 	t.Cc[sys.VMIN] = 1
 	t.Cc[sys.VTIME] = 1
 
-	if err = p.Ctl(initDefault + " " + inictl); err != nil {
+	if err = p.Ctl(initDefault, inictl); err != nil {
 		return
 	}
 
