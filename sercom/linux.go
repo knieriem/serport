@@ -133,12 +133,14 @@ func (d *dev) SetStopbits(n int) (err os.Error) {
 }
 
 func (p *dev) SetRts(on bool) os.Error {
+	p.rts = on
 	if on {
 		return p.commfn("set rts", sys.TIOCMBIS, sys.TIOCM_RTS)
 	}
 	return p.commfn("clr rts", sys.TIOCMBIC, sys.TIOCM_RTS)
 }
 func (p *dev) SetDtr(on bool) os.Error {
+	p.dtr = on
 	if on {
 		return p.commfn("set dtr", sys.TIOCMBIS, sys.TIOCM_DTR)
 	}
