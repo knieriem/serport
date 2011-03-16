@@ -69,6 +69,10 @@ func (p *dev) Close() os.Error {
 }
 
 func (d *dev) Drain() os.Error {
+	e := sys.IoctlTermios(d.Fd(), sys.TCSETSW, &d.tsav) // drain and set parameters
+	if e != 0 {
+		return d.errno("drain", e)
+	}
 	return nil
 }
 
