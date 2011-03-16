@@ -118,6 +118,7 @@ func (p *dev) Write(buf []byte) (int, os.Error) {
 }
 
 func (d *dev) Close() (err os.Error) {
+	d.Drain()
 	d.ev.r.Close()
 	d.ev.w.Close()
 	if e := syscall.CloseHandle(int32(d.fd)); e != 0 {
@@ -254,6 +255,7 @@ func (d *dev) updateCtl() (err os.Error) {
 		dcb.StopBits == sav.StopBits {
 		return
 	}
+	d.Drain()
 	if e := win.SetCommState(d.fd, &d.dcb); e != 0 {
 		err = d.errno("setdcb", e)
 	} else {

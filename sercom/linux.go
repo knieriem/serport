@@ -64,7 +64,7 @@ func Open(filename string, inictl string) (port Port, err os.Error) {
 }
 
 func (p *dev) Close() os.Error {
-	sys.IoctlTermios(p.Fd(), sys.TCSETS, &p.tOrig)
+	sys.IoctlTermios(p.Fd(), sys.TCSETSW, &p.tOrig)
 	return p.hw.Close()
 }
 
@@ -182,7 +182,7 @@ func (d *dev) updateCtl() (err os.Error) {
 		t.Cc[sys.VMIN] == tsav.Cc[sys.VMIN] {
 		return
 	}
-	if e := sys.IoctlTermios(d.Fd(), sys.TCSETS, t); e != 0 {
+	if e := sys.IoctlTermios(d.Fd(), sys.TCSETSW, t); e != 0 { // drain and set parameters
 		err = os.Errno(e)
 	} else {
 		d.tsav = d.t

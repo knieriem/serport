@@ -88,6 +88,7 @@ func (d *dev) Ctl(cmds ...string) os.Error {
 }
 
 func (d *dev) Delay(ms int) {
+	d.Drain()
 	time.Sleep(int64(ms) * 1e6)
 }
 
