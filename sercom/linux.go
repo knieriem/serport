@@ -182,6 +182,11 @@ func (d *dev) updateCtl() (err os.Error) {
 		err = os.Errno(e)
 	} else {
 		d.tsav = d.t
+
+		// It seems changing parameters also resets DTR/RTS lines;
+		// put in the previously requested states again:
+		d.SetRts(d.rts)
+		d.SetDtr(d.dtr)
 	}
 	return
 }
