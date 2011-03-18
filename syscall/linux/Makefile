@@ -13,9 +13,6 @@ GOFILES=\
 CGOFILES=\
 	user.go\
 
-CGO_OFILES=\
-	c-user.o\
-
 include $(GOROOT)/src/Make.pkg
 
 z%.go:

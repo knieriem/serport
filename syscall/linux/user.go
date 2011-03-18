@@ -1,14 +1,14 @@
 package syscall
 
-// #include "user.h"
+// #include <unistd.h>
+// #include <pwd.h>
 import "C"
 
-import "os"
 
 func GetUserName() string {
-	s := C.GetUserName(C.int(os.Getuid()))
-	if s == nil {
+	pw := C.getpwuid(C.getuid())
+	if pw == nil {
 		return "none"
 	}
-	return C.GoString(s)
+	return C.GoString(pw.pw_name)
 }
