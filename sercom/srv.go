@@ -75,22 +75,23 @@ func (d *data) unlock() {
 // `addr' shoud be of form "host:port", where host
 // may be missing.
 func Serve9P(addr string, dev Port) os.Error {
+	user := go9p.CurrentUser()
 	root := new(srv.File)
-	err := root.Add(nil, "/", go9p.CurrentUser(), nil, p.DMDIR|0555, nil)
+	err := root.Add(nil, "/", user, nil, p.DMDIR|0555, nil)
 	if err != nil {
 		goto error
 	}
 
 	c := new(ctl)
 	c.dev = dev
-	err = c.Add(root, "ctl", p.OsUsers.Uid2User(os.Geteuid()), nil, 0664, c)
+	err = c.Add(root, "ctl", user, nil, 0664, c)
 	if err != nil {
 		goto error
 	}
 	d := new(data)
 	d.dev = dev
 	d.ch = make(chan int, 1)
-	err = d.Add(root, "data", p.OsUsers.Uid2User(os.Geteuid()), nil, 0664, d)
+	err = d.Add(root, "data", user, nil, 0664, d)
 	if err != nil {
 		goto error
 	}
