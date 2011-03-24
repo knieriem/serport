@@ -1,4 +1,4 @@
-#include <windows.h>
+#include "c.h"
 
 typedef DCB $DCB;
 

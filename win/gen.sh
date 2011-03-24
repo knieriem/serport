@@ -1,4 +1,7 @@
-pkg=syscall
+# depends on environment variables:
+#	PKG, ZDIR, GOARCH
+
+pkg=$PKG
 
 CC=/usr/bin/i586-mingw32msvc-gcc
 mksyscall=$GOROOT/src/pkg/syscall/mksyscall_windows.sh
@@ -19,7 +22,7 @@ esac
 SFX=_$GOARCH.go
 
 $mksyscall $pkg.go |
-	sed 's/^package.*syscall$$/package syscall/' |
+	sed 's/^package.*syscall$/package '$PKG'/' |
 	sed '/^import/a \
 		import "syscall"' |
 	sed '/import *"DISABLEDunsafe"/d' |
@@ -31,18 +34,18 @@ $mksyscall $pkg.go |
 godefs -g $pkg -f$f -c $CC types.c  |
 	sed '/Pad_godefs_0/c\
 	Flags	uint32' |
-	awk -f fixtype.awk |
+	awk -f $ZDIR/fixtype.awk |
 	gofmt >ztypes$SFX
 
 
 (
-	echo '#include <windows.h>'
+	echo '#include "c.h"'
 	echo 'enum {'
 	sed '/^[^/]/ s/.*/	$& = &,/' < const
 	echo '};'
 ) > ,,const.c
 
 godefs -g $pkg -c $CC ,,const.c |
-	awk -f fixtype.awk |
+	awk -f $ZDIR/fixtype.awk |
 	gofmt > zconst$SFX
 rm -f ,,const.c

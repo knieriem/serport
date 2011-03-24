@@ -6,24 +6,15 @@ GOOS=windows
 
 include ../../Make.inc 
 
-api=syscall
+PKG=syscall
 
-TARG=github.com/knieriem/g/$(api)
+TARG=github.com/knieriem/g/$(PKG)
 
 GOFILES=\
-	$(api).go\
-	z$(api)_$(GOARCH).go\
+	$(PKG).go\
+	z$(PKG)_$(GOARCH).go\
 	ztypes_$(GOARCH).go\
 	zconst_$(GOARCH).go\
 
-include $(GOROOT)/src/Make.pkg
-
-z%.go:
-	GOARCH=386 sh ./gen.sh
-
-zclean:
-	rm -f z*.go
-
-
-.PHONY: \
-	zclean\
+ZDIR=../../win
+include $(ZDIR)/Make.zpkg

@@ -1,0 +1,19 @@
+ifndef TARG
+	TARG=github.com/knieriem/g/win/$(PKG)
+endif
+include $(GOROOT)/src/Make.pkg
+
+
+ifndef ZDIR
+	ZDIR :=$(shell d=.; while ! test -f Make.zpkg; do cd ..; d=$$d/..; done; echo $$d)
+endif
+
+
+z%.go:
+	GOARCH=386 PKG=$(PKG) ZDIR=$(ZDIR) sh $(ZDIR)/gen.sh
+
+zclean:
+	rm -f z*.go
+
+.PHONY: \
+	zclean\
