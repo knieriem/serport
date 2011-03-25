@@ -23,7 +23,6 @@ type data struct {
 	dev     Port
 	clunked bool
 	tmp     []byte
-	ch      chan int
 }
 
 func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
@@ -34,7 +33,9 @@ func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
 func (d *data) Read(fid *srv.FFid, buf []byte, offset uint64) (n int, e9 *p.Error) {
 	var err os.Error
 
-	d.lock()
+	d.Lock()
+	defer d.Unlock()
+
 	if nt := len(d.tmp); nt != 0 {
 		n = len(buf)
 		if n > nt {
@@ -51,7 +52,6 @@ func (d *data) Read(fid *srv.FFid, buf []byte, offset uint64) (n int, e9 *p.Erro
 			n = 0
 		}
 	}
-	d.unlock()
 	e9 = go9p.ToError(err)
 	return
 }
@@ -62,13 +62,6 @@ func (d *data) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
 func (d *data) Clunk(*srv.FFid) *p.Error {
 	d.clunked = true
 	return nil
-}
-
-func (d *data) lock() {
-	d.ch <- 1
-}
-func (d *data) unlock() {
-	<-d.ch
 }
 
 // Serve a previously opened serial device via 9P.
@@ -90,7 +83,6 @@ func Serve9P(addr string, dev Port) os.Error {
 	}
 	d := new(data)
 	d.dev = dev
-	d.ch = make(chan int, 1)
 	err = d.Add(root, "data", user, nil, 0664, d)
 	if err != nil {
 		goto error
