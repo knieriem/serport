@@ -142,15 +142,8 @@ func (v *String) String() (s string) {
 	if len(data) < 2 {
 		return
 	}
-	bo := byteOrder(isLittleEndian)
-	br := bytes.NewBuffer(data)
 	ubuf := make([]uint16, len(data)/2)
-	for i := range ubuf {
-		binary.Read(br, bo, &ubuf[i])
-	}
-	if ubuf[len(ubuf)-1] == 0 {
-		ubuf = ubuf[:len(ubuf)-1]
-	}
+	binary.Read(bytes.NewBuffer(data), byteOrder(isLittleEndian), ubuf)
 	return syscall.UTF16ToString(ubuf)
 }
 
