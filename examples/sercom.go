@@ -37,10 +37,14 @@ func main() {
 		return
 	}
 
-	if strings.Index(*dev, ":") == -1 {
-		port, err = sercom.Open(*dev, strings.Join(flag.Args(), " "))
-	} else {
+	if strings.Index(*dev, ":") != -1 {
 		port, err = sercom.Connect9P(*dev, "")
+	} else {
+		if fi, e := os.Stat(*dev); e == nil && fi.IsDirectory() {
+			port, err = sercom.OpenFsDev(*dev)
+		} else {
+			port, err = sercom.Open(*dev, strings.Join(flag.Args(), " "))
+		}
 	}
 	if err != nil {
 		log.Fatalln(err)

@@ -8,10 +8,8 @@ import (
 )
 
 type dev9 struct {
-	clnt      *p.Clnt
-	data      io.ReadWriteCloser
-	ctl       io.WriteCloser
-	recording bool
+	clnt *p.Clnt
+	fdev
 }
 
 // Connect to a 9P server that is listening at `addr',
@@ -49,11 +47,41 @@ unmount:
 	return
 }
 
-func (d *dev9) Read(buf []byte) (n int, err os.Error) {
+func (d *dev9) Close() os.Error {
+	d.fdev.Close()
+	d.clnt.Unmount()
+	return nil
+}
+
+
+type fdev struct {
+	data      io.ReadWriteCloser
+	ctl       io.WriteCloser
+	recording bool
+}
+
+// Connect to a serial device that is accessible in
+// the local file system, e.g. driven by a 9pfuse mounted
+// 9P service.
+// Devdir is the name of a directory, where the files
+// "ctl" and "data" are expected to be found.
+func OpenFsDev(devdir string) (port Port, err os.Error) {
+	d := new(fdev)
+	if d.data, err = os.Open(devdir+"/data", os.O_RDWR, 0); err == nil {
+		if d.ctl, err = os.Open(devdir+"/ctl", os.O_RDWR, 0); err != nil {
+			d.data.Close()
+		} else {
+			port = d
+		}
+	}
+	return
+}
+
+func (d *fdev) Read(buf []byte) (n int, err os.Error) {
 	return d.data.Read(buf)
 }
 
-func (d *dev9) Write(buf []byte) (n int, err os.Error) {
+func (d *fdev) Write(buf []byte) (n int, err os.Error) {
 	if d.recording {
 		for _, b := range buf {
 			if err = d.cmdi('W', int(b)); err != nil {
@@ -65,35 +93,34 @@ func (d *dev9) Write(buf []byte) (n int, err os.Error) {
 	return d.data.Write(buf)
 }
 
-func (d *dev9) Close() os.Error {
+func (d *fdev) Close() os.Error {
 	d.ctl.Close()
 	d.data.Close()
-	d.clnt.Unmount()
 	return nil
 }
 
-func (d *dev9) Drain() os.Error {
+func (d *fdev) Drain() os.Error {
 	return nil
 }
 
-func (d *dev9) Purge(in, out bool) {
+func (d *fdev) Purge(in, out bool) {
 }
 
-func (d *dev9) Delay(ms int) {
+func (d *fdev) Delay(ms int) {
 	d.cmdi('D', ms)
 }
 
-func (d *dev9) Record() {
+func (d *fdev) Record() {
 	d.cmd("{")
 	d.recording = true
 }
 
-func (d *dev9) Commit() {
+func (d *fdev) Commit() {
 	d.cmd("}")
 	d.recording = false
 }
 
-func (d *dev9) Ctl(cmds ...string) (err os.Error) {
+func (d *fdev) Ctl(cmds ...string) (err os.Error) {
 	for _, s := range cmds {
 		if err = d.cmd(s); err != nil {
 			break
@@ -102,42 +129,42 @@ func (d *dev9) Ctl(cmds ...string) (err os.Error) {
 	return
 }
 
-func (d *dev9) SetBaudrate(val int) (err os.Error) {
+func (d *fdev) SetBaudrate(val int) (err os.Error) {
 	return d.cmdi('b', val)
 }
 
-func (d *dev9) SetWordlen(n int) os.Error {
+func (d *fdev) SetWordlen(n int) os.Error {
 	return d.cmdi('l', n)
 }
 
-func (d *dev9) SetParity(parity byte) os.Error {
+func (d *fdev) SetParity(parity byte) os.Error {
 	return d.cmd("p" + string(parity))
 }
 
-func (d *dev9) SetStopbits(n int) (err os.Error) {
+func (d *fdev) SetStopbits(n int) (err os.Error) {
 	if n == 1 || n == 2 {
 		return d.cmdi('s', n)
 	}
 	return os.NewError("invalid number of stopbits")
 }
 
-func (d *dev9) SetRts(on bool) os.Error {
+func (d *fdev) SetRts(on bool) os.Error {
 	return d.cmdbool('r', on)
 }
-func (d *dev9) SetDtr(on bool) os.Error {
+func (d *fdev) SetDtr(on bool) os.Error {
 	return d.cmdbool('d', on)
 }
 
-func (d *dev9) SetRtsCts(on bool) os.Error {
+func (d *fdev) SetRtsCts(on bool) os.Error {
 	return d.cmdbool('m', on)
 }
 
-func (d *dev9) cmd(c string) (err os.Error) {
+func (d *fdev) cmd(c string) (err os.Error) {
 	_, err = d.ctl.Write([]byte(c))
 	return err
 }
 
-func (d *dev9) cmdbool(c byte, on bool) (err os.Error) {
+func (d *fdev) cmdbool(c byte, on bool) (err os.Error) {
 	var msg = []byte{c, '0', c, '1'}
 
 	if on {
@@ -147,6 +174,6 @@ func (d *dev9) cmdbool(c byte, on bool) (err os.Error) {
 	return
 }
 
-func (d *dev9) cmdi(c byte, val int) (err os.Error) {
+func (d *fdev) cmdi(c byte, val int) (err os.Error) {
 	return d.cmd(string(c) + strconv.Itoa(val))
 }
