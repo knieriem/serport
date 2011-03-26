@@ -16,16 +16,24 @@ var (
 )
 
 type ctl struct {
-	srv.File
+	file
 	dev Port
 }
 type data struct {
-	m	sync.Mutex
-	srv.File
+	file
+	m sync.Mutex
 	dev     Port
-	fid *srv.Fid
+	fid     *srv.Fid
 	clunked bool
 	tmp     []byte
+}
+
+type file struct {
+	srv.File
+}
+
+func (*file) Wstat(*srv.FFid, *p.Dir) *p.Error {
+	return nil
 }
 
 func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
