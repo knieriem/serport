@@ -23,6 +23,7 @@ type data struct {
 	m	sync.Mutex
 	srv.File
 	dev     Port
+	fid *srv.Fid
 	clunked bool
 	tmp     []byte
 }
@@ -46,6 +47,8 @@ func (d *data) Read(fid *srv.FFid, buf []byte, offset uint64) (n int, e9 *p.Erro
 		copy(buf, d.tmp[:n])
 		d.tmp = d.tmp[n:]
 	} else {
+		d.fid = fid.Fid
+		d.clunked = false
 		n, err = d.dev.Read(buf)
 		if d.clunked {
 			d.tmp = make([]byte, n)
@@ -61,8 +64,11 @@ func (d *data) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
 	n, err := d.dev.Write(buf)
 	return n, go9p.ToError(err)
 }
-func (d *data) Clunk(*srv.FFid) *p.Error {
-	d.clunked = true
+
+func (d *data) Clunk(f *srv.FFid) *p.Error {
+	if f.Fid == d.fid {
+		d.clunked = true
+	}
 	return nil
 }
 
