@@ -43,6 +43,12 @@ type dev struct {
 }
 
 func (d *dev) Ctl(cmds ...string) os.Error {
+	updateCtlNow := func() {
+		d.inCtl = false
+		d.updateCtl()
+		d.inCtl = true
+	}
+
 	d.inCtl = true
 
 	for _, s := range cmds {
@@ -68,10 +74,11 @@ func (d *dev) Ctl(cmds ...string) os.Error {
 			case 'm':
 				d.SetRtsCts(n != 0)
 			case 'D':
-				d.inCtl = false
-				d.updateCtl()
-				d.inCtl = true
+				updateCtlNow()
 				d.Delay(n)
+			case 'W':
+				updateCtlNow()
+				d.Write([]byte{byte(n)})
 			case 'b':
 				d.SetBaudrate(n)
 			case 'l':
