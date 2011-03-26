@@ -3,6 +3,7 @@ package sercom
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"go9p.googlecode.com/hg/p"
@@ -18,6 +19,9 @@ var (
 type ctl struct {
 	file
 	dev Port
+
+	record bool
+	rlist  []string
 }
 type data struct {
 	file
@@ -37,7 +41,29 @@ func (*file) Wstat(*srv.FFid, *p.Dir) *p.Error {
 }
 
 func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
-	err := c.dev.Ctl(string(buf))
+	var err os.Error
+
+	for _, cmd := range strings.Fields(string(buf)) {
+		switch cmd {
+		case "{":
+			c.record = true
+		case "}":
+			c.record = false
+			if len(c.rlist) != 0 {
+				err = c.dev.Ctl(c.rlist...)
+				c.rlist = c.rlist[:0]
+			}
+		default:
+			if c.record {
+				c.rlist = append(c.rlist, cmd)
+			} else {
+				err = c.dev.Ctl(cmd)
+			}
+		}
+		if err != nil {
+			break
+		}
+	}
 	return len(buf), go9p.ToError(err)
 }
 
