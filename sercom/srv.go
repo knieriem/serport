@@ -3,6 +3,7 @@ package sercom
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"go9p.googlecode.com/hg/p"
 	"go9p.googlecode.com/hg/p/srv"
@@ -19,6 +20,7 @@ type ctl struct {
 	dev Port
 }
 type data struct {
+	m	sync.Mutex
 	srv.File
 	dev     Port
 	clunked bool
@@ -33,8 +35,8 @@ func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
 func (d *data) Read(fid *srv.FFid, buf []byte, offset uint64) (n int, e9 *p.Error) {
 	var err os.Error
 
-	d.Lock()
-	defer d.Unlock()
+	d.m.Lock()
+	defer d.m.Unlock()
 
 	if nt := len(d.tmp); nt != 0 {
 		n = len(buf)
