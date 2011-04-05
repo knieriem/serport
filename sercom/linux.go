@@ -247,8 +247,13 @@ func setBlocking(fd int) (errno int) {
 
 // Get a list of (probably) present serial devices
 func DeviceList() (list []string) {
-	list = append(list, filepath.Glob("/dev/ttyUSB[0-9]*")...)
-	list = append(list, filepath.Glob("/dev/ttyACM[0-9]*")...)
-	list = append(list, filepath.Glob("/dev/ttyS[0-9]*")...)
+	list = append(list, globDev("/dev/ttyUSB[0-9]*")...)
+	list = append(list, globDev("/dev/ttyACM[0-9]*")...)
+	list = append(list, globDev("/dev/ttyS[0-9]*")...)
 	return
+}
+
+func globDev(pat string) []string {
+	s, _ := filepath.Glob(pat)	
+	return s
 }
