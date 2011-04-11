@@ -94,6 +94,7 @@ func (d *fdev) Write(buf []byte) (n int, err os.Error) {
 }
 
 func (d *fdev) Close() os.Error {
+	d.cmd("U")	// unlock remote Read()
 	d.ctl.Close()
 	d.data.Close()
 	return nil

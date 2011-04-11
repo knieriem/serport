@@ -20,7 +20,7 @@ var (
 type ctl struct {
 	file
 	dev Port
-
+	dataUnblockch chan bool
 	record bool
 	rlist  []string
 }
@@ -46,6 +46,11 @@ func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
 
 	for _, cmd := range strings.Fields(string(buf)) {
 		switch cmd {
+		case "U":
+			select {
+			case c.dataUnblockch <- true:
+			default:
+			}
 		case "{":
 			c.record = true
 		case "}":
@@ -130,6 +135,7 @@ func Serve9P(addr string, dev Port) os.Error {
 	d.dev = dev
 	d.rch = ioutil.ChannelizeReader(dev, nil)
 	d.unblockch = make(chan bool)
+	c.dataUnblockch = d.unblockch
 	err = d.Add(root, "data", user, nil, 0664, d)
 	if err != nil {
 		goto error
