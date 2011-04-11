@@ -9,7 +9,7 @@ ifndef ZDIR
 endif
 
 
-z%.go:
+z%.go: $(PKG).go
 	GOARCH=386 PKG=$(PKG) ZDIR=$(ZDIR) sh $(ZDIR)/gen.sh
 
 zclean:
