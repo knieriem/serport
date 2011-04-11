@@ -31,6 +31,7 @@ func Open(filename string, inictl string) (port Port, err os.Error) {
 	p := new(dev)
 	p.File = file
 	p.name = filename
+	p.encaps = p
 	fd := file.Fd()
 	e := setBlocking(fd)
 	if e != 0 {

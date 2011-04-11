@@ -38,6 +38,7 @@ func Open(file string, inictl string) (p Port, err os.Error) {
 	d := new(dev)
 	d.fd = uint32(fd)
 	d.name = file
+	d.encaps = d
 
 	if err = d.Ctl(initDefault, inictl); err != nil {
 		return

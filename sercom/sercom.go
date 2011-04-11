@@ -40,16 +40,18 @@ type dev struct {
 	inCtl    bool
 	rts, dtr bool
 	hw
+	encaps Port
 }
 
-func (d *dev) Ctl(cmds ...string) os.Error {
+func (p *dev) Ctl(cmds ...string) os.Error {
 	updateCtlNow := func() {
-		d.inCtl = false
-		d.updateCtl()
-		d.inCtl = true
+		p.inCtl = false
+		p.updateCtl()
+		p.inCtl = true
 	}
 
-	d.inCtl = true
+	p.inCtl = true
+	d := p.encaps
 
 	for _, s := range cmds {
 		for _, f := range strings.Fields(s) {
@@ -90,8 +92,8 @@ func (d *dev) Ctl(cmds ...string) os.Error {
 			}
 		}
 	}
-	d.inCtl = false
-	return d.updateCtl()
+	p.inCtl = false
+	return p.updateCtl()
 }
 
 func (d *dev) Delay(ms int) {
@@ -119,4 +121,10 @@ type LineState struct {
 	Dsr  bool
 	Ring bool
 	Dcd  bool
+}
+
+func SetEncapsulatingPort(dest, p Port) {
+	if dev, ok := dest.(*dev); ok {
+		dev.encaps = p
+	}
 }
