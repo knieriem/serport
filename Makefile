@@ -7,6 +7,7 @@ endif
 DIRS=\
 	syscall\
 	go9p\
+	ioutil\
 	$(REGISTRY)\
 	util\
 	sercom\

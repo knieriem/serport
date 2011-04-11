@@ -19,6 +19,10 @@
 	`string.Fields`, but with interpretation of single
 	quotes).
 
+*	__ioutil__
+
+	`ChannelizeReader`.
+
 *	__registry__
 
 	Access to Windows' registry database (still read-only). 
