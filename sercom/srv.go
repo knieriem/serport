@@ -9,6 +9,7 @@ import (
 	"go9p.googlecode.com/hg/p"
 	"go9p.googlecode.com/hg/p/srv"
 	"github.com/knieriem/g/go9p"
+	"github.com/knieriem/g/ioutil"
 )
 
 var (
@@ -25,11 +26,11 @@ type ctl struct {
 }
 type data struct {
 	file
-	m sync.Mutex
+	m       sync.Mutex
 	dev     Port
+	rch	ioutil.RdChannels
 	fid     *srv.Fid
-	clunked bool
-	tmp     []byte
+	unblockch chan bool
 }
 
 type file struct {
@@ -73,24 +74,20 @@ func (d *data) Read(fid *srv.FFid, buf []byte, offset uint64) (n int, e9 *p.Erro
 	d.m.Lock()
 	defer d.m.Unlock()
 
-	if nt := len(d.tmp); nt != 0 {
-		n = len(buf)
-		if n > nt {
-			n = nt
+	d.fid = fid.Fid
+	select {
+	case in := <- d.rch.Data:
+		n = len(in.Data)
+		if n>len(buf) {
+			n = len(buf)
 		}
-		copy(buf, d.tmp[:n])
-		d.tmp = d.tmp[n:]
-	} else {
-		d.fid = fid.Fid
-		d.clunked = false
-		n, err = d.dev.Read(buf)
-		if d.clunked {
-			d.tmp = make([]byte, n)
-			copy(d.tmp, buf[:n])
-			d.clunked = false
-			n = 0
-		}
+		copy(buf, in.Data[:n])
+		d.rch.Req <- n
+		err = in.Err
+	case <- d.unblockch:
+		n = 0
 	}
+	d.fid = nil
 	e9 = go9p.ToError(err)
 	return
 }
@@ -101,7 +98,12 @@ func (d *data) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
 
 func (d *data) Clunk(f *srv.FFid) *p.Error {
 	if f.Fid == d.fid {
-		d.clunked = true
+		// The fid is clunked while a Tread is outstanding.
+		// Unblock data.Read() so that the Rread can be sent.
+		select {
+		case d.unblockch <- true:
+		default:
+		}
 	}
 	return nil
 }
@@ -123,8 +125,11 @@ func Serve9P(addr string, dev Port) os.Error {
 	if err != nil {
 		goto error
 	}
+
 	d := new(data)
 	d.dev = dev
+	d.rch = ioutil.ChannelizeReader(dev, nil)
+	d.unblockch = make(chan bool)
 	err = d.Add(root, "data", user, nil, 0664, d)
 	if err != nil {
 		goto error
