@@ -8,7 +8,7 @@ DIRS=\
 	syscall\
 	go9p\
 	$(REGISTRY)\
-	strings\
+	util\
 	sercom\
 	\
 	examples\

@@ -1,6 +1,6 @@
 include ../Make.inc 
 
-TARG=github.com/knieriem/g/strings
+TARG=github.com/knieriem/g/util
 
 GOFILES=\
 	tokenize.go\

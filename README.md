@@ -11,7 +11,7 @@
 	Utility functions and types for [go9p][]
 
 
-*	__strings__
+*	__util__
 
 	Contains `Tokenize`, an implementation of an
 	equally named [function of Plan 9's libc][tokenize],
