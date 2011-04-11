@@ -65,6 +65,7 @@ func main() {
 		log.Println(sig)
 	}
 	port.Close()
+	os.Exit(0)
 }
 
 var cherr chan os.Error
