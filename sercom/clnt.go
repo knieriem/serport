@@ -67,8 +67,8 @@ type fdev struct {
 // "ctl" and "data" are expected to be found.
 func OpenFsDev(devdir string) (port Port, err os.Error) {
 	d := new(fdev)
-	if d.data, err = os.Open(devdir+"/data", os.O_RDWR, 0); err == nil {
-		if d.ctl, err = os.Open(devdir+"/ctl", os.O_RDWR, 0); err != nil {
+	if d.data, err = os.OpenFile(devdir+"/data", os.O_RDWR, 0); err == nil {
+		if d.ctl, err = os.OpenFile(devdir+"/ctl", os.O_RDWR, 0); err != nil {
 			d.data.Close()
 		} else {
 			port = d

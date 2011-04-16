@@ -25,7 +25,7 @@ func Open(filename string, inictl string) (port Port, err os.Error) {
 
 	// NONBLOCK prevents Open from blocking
 	// until DCD is asserted from modem
-	if file, err = os.Open(filename, os.O_RDWR|os.O_NOCTTY|os.O_NONBLOCK, 0); err != nil {
+	if file, err = os.OpenFile(filename, os.O_RDWR|os.O_NOCTTY|os.O_NONBLOCK, 0); err != nil {
 		return
 	}
 	p := new(dev)
