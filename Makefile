@@ -9,7 +9,7 @@ DIRS=\
 	go9p\
 	ioutil\
 	$(REGISTRY)\
-	util\
+	text\
 	sercom\
 	\
 	examples\

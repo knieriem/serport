@@ -11,13 +11,14 @@
 	Utility functions and types for [go9p][]
 
 
-*	__util__
+*	__text__
+
+	Plain text processing utilities.
 
 	Contains `Tokenize`, an implementation of an
-	equally named [function of Plan 9's libc][tokenize],
-	which i miss from Go's string package (similar to
-	`string.Fields`, but with interpretation of single
-	quotes).
+	equally named [function of Plan 9's libc][tokenize]
+	(similar to `string.Fields`, but with interpretation of
+	single quotes).
 
 *	__ioutil__
 
