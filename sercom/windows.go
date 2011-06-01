@@ -78,7 +78,7 @@ func (p *dev) Read(buf []byte) (int, os.Error) {
 	for {
 		var ov syscall.Overlapped
 
-		ov.HEvent = p.ev.r.Byteptr()
+		ov.HEvent = int32(p.ev.r)
 		if e := syscall.ReadFile(int32(p.fd), buf, &done, &ov); e != 0 {
 			if e != syscall.ERROR_IO_PENDING {
 			error:
@@ -101,7 +101,7 @@ func (p *dev) Write(buf []byte) (int, os.Error) {
 	for {
 		var ov syscall.Overlapped
 
-		ov.HEvent = p.ev.w.Byteptr()
+		ov.HEvent = int32(p.ev.w)
 		if e := syscall.WriteFile(int32(p.fd), buf, &done, &ov); e != 0 {
 			if e != syscall.ERROR_IO_PENDING {
 			error:
