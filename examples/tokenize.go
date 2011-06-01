@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"encoding/line"
+	"bufio"
 	"os"
 	"github.com/knieriem/g/text"
 )
@@ -11,7 +11,7 @@ import (
 // fields using strings.Tokenize.
 
 func main() {
-	r := line.NewReader(os.Stdin, 256)
+	r := bufio.NewReader(os.Stdin)
 	l, _, _ := r.ReadLine()
 
 	for _, s := range text.Tokenize(string(l)) {
