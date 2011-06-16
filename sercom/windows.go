@@ -2,6 +2,7 @@ package sercom
 
 import (
 	"os"
+	"path/filepath"
 	"syscall"
 	"github.com/knieriem/g/registry"
 	win "github.com/knieriem/g/syscall"
@@ -30,6 +31,12 @@ func Open(file string, inictl string) (p Port, err os.Error) {
 		createmode = syscall.OPEN_EXISTING
 		flags      = win.FILE_FLAG_OVERLAPPED
 	)
+
+	// make sure COM interfaces with numbers >9 get prefixed properly
+	if match, _ := filepath.Match("[cC][oO][mM]1[0-9]", file); match {
+		file = `\\.\` + file
+	}
+
 	fd, e := syscall.CreateFile(syscall.StringToUTF16Ptr(file), access, sharemode, nil, createmode, flags, 0)
 	if e != 0 {
 		goto error
