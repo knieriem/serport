@@ -255,6 +255,6 @@ func DeviceList() (list []string) {
 }
 
 func globDev(pat string) []string {
-	s, _ := filepath.Glob(pat)	
+	s, _ := filepath.Glob(pat)
 	return s
 }

@@ -19,17 +19,17 @@ var (
 
 type ctl struct {
 	file
-	dev Port
+	dev           Port
 	dataUnblockch chan bool
-	record bool
-	rlist  []string
+	record        bool
+	rlist         []string
 }
 type data struct {
 	file
-	m       sync.Mutex
-	dev     Port
-	rch	ioutil.RdChannels
-	fid     *srv.Fid
+	m         sync.Mutex
+	dev       Port
+	rch       ioutil.RdChannels
+	fid       *srv.Fid
 	unblockch chan bool
 }
 
@@ -81,15 +81,15 @@ func (d *data) Read(fid *srv.FFid, buf []byte, offset uint64) (n int, e9 *p.Erro
 
 	d.fid = fid.Fid
 	select {
-	case in := <- d.rch.Data:
+	case in := <-d.rch.Data:
 		n = len(in.Data)
-		if n>len(buf) {
+		if n > len(buf) {
 			n = len(buf)
 		}
 		copy(buf, in.Data[:n])
 		d.rch.Req <- n
 		err = in.Err
-	case <- d.unblockch:
+	case <-d.unblockch:
 		n = 0
 	}
 	d.fid = nil
