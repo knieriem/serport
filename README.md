@@ -20,6 +20,12 @@
 	(similar to `string.Fields`, but with interpretation of
 	single quotes).
 
+*	__image__
+
+	A `Bitmap` image of `BinaryColor` values implementing the
+	`image.Image` interface. It is used by packages *pnm* and *xbm*,
+	which contain decoders for raw PBM and XBM images.
+
 *	__ioutil__
 
 	`ChannelizeReader`.

@@ -10,6 +10,7 @@ DIRS=\
 	ioutil\
 	$(REGISTRY)\
 	text\
+	image\
 	sercom\
 	\
 	examples\
