@@ -1,7 +1,7 @@
 package image
 
 import (
-	i "image"
+	"image/color"
 )
 
 
@@ -18,7 +18,7 @@ func (c BinaryColor) RGBA() (r, g, b, a uint32) {
 	return a, a, a, a
 }
 
-func toBinaryColor(c i.Color) i.Color {
+func toBinaryColor(c color.Color) color.Color {
 	if _, ok := c.(BinaryColor); ok {
 		return c
 	}
@@ -28,4 +28,4 @@ func toBinaryColor(c i.Color) i.Color {
 }
 
 // The ColorModel associated with BinaryColor.
-var BinaryColorModel i.ColorModel = i.ColorModelFunc(toBinaryColor)
+var BinaryColorModel color.Model = color.ModelFunc(toBinaryColor)

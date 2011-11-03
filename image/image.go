@@ -4,6 +4,7 @@ package image
 
 import (
 	i "image"
+	"image/color"
 )
 
 // A Bitmap is an in-memory image of BinaryColor values.
@@ -31,11 +32,11 @@ func (p *Bitmap) bitAddr(x, y int) (addr *uint8, bit uint8) {
 
 }
 
-func (p *Bitmap) ColorModel() i.ColorModel { return BinaryColorModel }
+func (p *Bitmap) ColorModel() color.Model { return BinaryColorModel }
 
 func (p *Bitmap) Bounds() i.Rectangle { return p.Rect }
 
-func (p *Bitmap) At(x, y int) i.Color {
+func (p *Bitmap) At(x, y int) color.Color {
 	if !(i.Point{x, y}.In(p.Rect)) {
 		return BinaryColor{}
 	}
@@ -43,7 +44,7 @@ func (p *Bitmap) At(x, y int) i.Color {
 	return BinaryColor{(*addr)&bit != 0}
 }
 
-func (p *Bitmap) Set(x, y int, c i.Color) {
+func (p *Bitmap) Set(x, y int, c color.Color) {
 	if !(i.Point{x, y}.In(p.Rect)) {
 		return
 	}

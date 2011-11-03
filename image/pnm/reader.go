@@ -12,6 +12,7 @@ package pnm
 import (
 	"bufio"
 	"image"
+	"image/color"
 	"io"
 	"os"
 )
@@ -25,7 +26,7 @@ var formats = []*format{&pbmRawFormat}
 type format struct {
 	id         byte
 	readMaxval bool
-	colorModel image.ColorModel
+	colorModel color.Model
 	decode     func(r io.Reader, w, h, maxval int) image.Image
 }
 
