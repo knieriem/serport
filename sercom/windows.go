@@ -42,6 +42,12 @@ func Open(file string, inictl string) (p Port, err os.Error) {
 		goto error
 	}
 
+	goto try
+error:
+	err = &os.PathError{"open", file, os.Errno(e)}
+	return
+
+try:
 	d := new(dev)
 	d.fd = uint32(fd)
 	d.name = file
@@ -73,10 +79,6 @@ func Open(file string, inictl string) (p Port, err os.Error) {
 	}
 	p = d
 	return
-
-error:
-	err = &os.PathError{"open", file, os.Errno(e)}
-	return
 }
 
 func (p *dev) Read(buf []byte) (int, os.Error) {
@@ -88,11 +90,10 @@ func (p *dev) Read(buf []byte) (int, os.Error) {
 		ov.HEvent = int32(p.ev.r)
 		if e := syscall.ReadFile(int32(p.fd), buf, &done, &ov); e != 0 {
 			if e != syscall.ERROR_IO_PENDING {
-			error:
 				return 0, &os.PathError{"reading from", p.name, os.Errno(e)}
 			}
 			if e = win.GetOverlappedResult(p.fd, &ov, &done, 1); e != 0 {
-				goto error
+				return 0, &os.PathError{"reading from", p.name, os.Errno(e)}
 			}
 		}
 		if done > 0 {
@@ -111,11 +112,10 @@ func (p *dev) Write(buf []byte) (int, os.Error) {
 		ov.HEvent = int32(p.ev.w)
 		if e := syscall.WriteFile(int32(p.fd), buf, &done, &ov); e != 0 {
 			if e != syscall.ERROR_IO_PENDING {
-			error:
 				return 0, &os.PathError{"writing to", p.name, os.Errno(e)}
 			}
 			if e = win.GetOverlappedResult(p.fd, &ov, &done, 1); e != 0 {
-				goto error
+				return 0, &os.PathError{"writing to", p.name, os.Errno(e)}
 			}
 		}
 		if done > 0 {
