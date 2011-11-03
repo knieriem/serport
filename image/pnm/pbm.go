@@ -1,8 +1,8 @@
 package pnm
 
 import (
-	"image"
 	img "github.com/knieriem/g/image"
+	"image"
 	"io"
 )
 

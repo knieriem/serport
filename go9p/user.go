@@ -1,9 +1,9 @@
 package go9p
 
 import (
-	"os"
 	"github.com/knieriem/g/syscall"
 	"go9p.googlecode.com/hg/p"
+	"os"
 )
 
 type user struct {

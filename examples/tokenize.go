@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"bufio"
-	"os"
+	"fmt"
 	"github.com/knieriem/g/text"
+	"os"
 )
 
 // Read a line from stdin, and split it into

@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"github.com/knieriem/g/registry"
+	"os"
 )
 
 func main() {
