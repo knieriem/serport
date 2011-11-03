@@ -1,7 +1,6 @@
 package sercom
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -116,19 +115,19 @@ func (d *data) Clunk(f *srv.FFid) *p.Error {
 // Serve a previously opened serial device via 9P.
 // `addr' shoud be of form "host:port", where host
 // may be missing.
-func Serve9P(addr string, dev Port) os.Error {
+func Serve9P(addr string, dev Port) (err os.Error) {
 	user := go9p.CurrentUser()
 	root := new(srv.File)
-	err := root.Add(nil, "/", user, nil, p.DMDIR|0555, nil)
+	err = root.Add(nil, "/", user, nil, p.DMDIR|0555, nil)
 	if err != nil {
-		goto error
+		return
 	}
 
 	c := new(ctl)
 	c.dev = dev
 	err = c.Add(root, "ctl", user, nil, 0664, c)
 	if err != nil {
-		goto error
+		return
 	}
 
 	d := new(data)
@@ -138,7 +137,7 @@ func Serve9P(addr string, dev Port) os.Error {
 	c.dataUnblockch = d.unblockch
 	err = d.Add(root, "data", user, nil, 0664, d)
 	if err != nil {
-		goto error
+		return
 	}
 
 	s := srv.NewFileSrv(root)
@@ -153,12 +152,5 @@ func Serve9P(addr string, dev Port) os.Error {
 
 	s.Start(s)
 	err = s.StartNetListener("tcp", addr)
-	if err != nil {
-		goto error
-	}
-
-	return nil
-
-error:
-	return os.NewError(fmt.Sprintf("Error: %s %d", err.Error, err.Errornum))
+	return
 }
