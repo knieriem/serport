@@ -7,22 +7,13 @@ import (
 )
 
 
-type Handle uint32
-
-func (h Handle) Close() {
-	syscall.CloseHandle(int32(h))
-}
-func (h Handle) Byteptr() *byte {
-	return (*byte)(unsafe.Pointer(uintptr(h)))
-}
-
 const (
 	// for CreateEvent
 	EvManualReset = true
 	EvInitiallyOn = true
 )
 
-func CreateEvent(manualReset, initialState bool) (h Handle, errno int) {
+func CreateEvent(manualReset, initialState bool) (h syscall.Handle, errno int) {
 	return CreateEventW(nil, b2i(manualReset), b2i(initialState), nil)
 }
 func b2i(v bool) int {
@@ -32,18 +23,18 @@ func b2i(v bool) int {
 	return 0
 }
 
-//sys CreateEventW(sa *syscall.SecurityAttributes, manualReset int, initialState int, name *uint16) (hEv Handle, errno int)
+//sys CreateEventW(sa *syscall.SecurityAttributes, manualReset int, initialState int, name *uint16) (hEv syscall.Handle, errno int)
 
 
-//sys GetOverlappedResult(h uint32, ov *syscall.Overlapped, done *uint32, bWait int) (errno int)
+//sys GetOverlappedResult(h syscall.Handle, ov *syscall.Overlapped, done *uint32, bWait int) (errno int)
 
 
-//sys	EscapeCommFunction(h uint32, fn uint32) (errno int)
-//sys SetupComm(h uint32, inQSize uint32, outQSize uint32) (errno int)
-//sys SetCommTimeouts(h uint32, cto *CommTimeouts) (errno int)
-//sys setCommState(h uint32, dcb *DCB) (errno  int) = SetCommState
-//sys getCommState(h uint32, dcb *DCB) (errno int) = GetCommState
-//sys FlushFileBuffers(h uint32) (errno int)
+//sys	EscapeCommFunction(h syscall.Handle, fn uint32) (errno int)
+//sys SetupComm(h syscall.Handle, inQSize uint32, outQSize uint32) (errno int)
+//sys SetCommTimeouts(h syscall.Handle, cto *CommTimeouts) (errno int)
+//sys setCommState(h syscall.Handle, dcb *DCB) (errno  int) = SetCommState
+//sys getCommState(h syscall.Handle, dcb *DCB) (errno int) = GetCommState
+//sys FlushFileBuffers(h syscall.Handle) (errno int)
 
 // Flags for DCB.Flags (simulating a bitfield)
 const (
@@ -67,12 +58,12 @@ const (
 	DCBmRtsControl = 3
 )
 
-func SetCommState(h uint32, dcb *DCB) (errno int) {
+func SetCommState(h syscall.Handle, dcb *DCB) (errno int) {
 	dcb.DCBlength = dcbSize
 	dcb.Flags |= DCBfBinary
 	return setCommState(h, dcb)
 }
-func GetCommState(h uint32, dcb *DCB) (errno int) {
+func GetCommState(h syscall.Handle, dcb *DCB) (errno int) {
 	dcb.DCBlength = dcbSize
 	return getCommState(h, dcb)
 }
@@ -101,14 +92,14 @@ func GetUserName() string {
 }
 
 
-func loadDll(fname string) uint32 {
+func loadDll(fname string) syscall.Handle {
 	h, e := syscall.LoadLibrary(fname)
 	if e != 0 {
 		log.Fatalf("LoadLibrary(%s) failed with err=%d.\n", fname, e)
 	}
 	return h
 }
-func getSysProcAddr(m uint32, pname string) uintptr {
+func getSysProcAddr(m syscall.Handle, pname string) uintptr {
 	p, e := syscall.GetProcAddress(m, pname)
 	if e != 0 {
 		log.Fatalf("GetProcAddress(%s) failed with err=%d.\n", pname, e)

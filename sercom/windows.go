@@ -13,14 +13,14 @@ const (
 )
 
 type hw struct {
-	fd uint32
+	fd syscall.Handle
 
 	initDone    bool
 	dcb, dcbsav win.DCB
 
 	ev struct {
-		w win.Handle
-		r win.Handle
+		w syscall.Handle
+		r syscall.Handle
 	}
 }
 
@@ -49,7 +49,7 @@ error:
 
 try:
 	d := new(dev)
-	d.fd = uint32(fd)
+	d.fd = fd
 	d.name = file
 	d.encaps = d
 
@@ -87,8 +87,8 @@ func (p *dev) Read(buf []byte) (int, os.Error) {
 	for {
 		var ov syscall.Overlapped
 
-		ov.HEvent = int32(p.ev.r)
-		if e := syscall.ReadFile(int32(p.fd), buf, &done, &ov); e != 0 {
+		ov.HEvent = p.ev.r
+		if e := syscall.ReadFile(p.fd, buf, &done, &ov); e != 0 {
 			if e != syscall.ERROR_IO_PENDING {
 				return 0, &os.PathError{"reading from", p.name, os.Errno(e)}
 			}
@@ -109,8 +109,8 @@ func (p *dev) Write(buf []byte) (int, os.Error) {
 	for {
 		var ov syscall.Overlapped
 
-		ov.HEvent = int32(p.ev.w)
-		if e := syscall.WriteFile(int32(p.fd), buf, &done, &ov); e != 0 {
+		ov.HEvent = p.ev.w
+		if e := syscall.WriteFile(p.fd, buf, &done, &ov); e != 0 {
 			if e != syscall.ERROR_IO_PENDING {
 				return 0, &os.PathError{"writing to", p.name, os.Errno(e)}
 			}
@@ -127,9 +127,9 @@ func (p *dev) Write(buf []byte) (int, os.Error) {
 
 func (d *dev) Close() (err os.Error) {
 	d.Drain()
-	d.ev.r.Close()
-	d.ev.w.Close()
-	if e := syscall.CloseHandle(int32(d.fd)); e != 0 {
+	syscall.CloseHandle(d.ev.r)
+	syscall.CloseHandle(d.ev.w)
+	if e := syscall.CloseHandle(d.fd); e != 0 {
 		err = d.errno("close", e)
 	}
 	return nil
