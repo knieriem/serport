@@ -2,8 +2,6 @@ package syscall
 
 import (
 	"syscall"
-	"log"
-	"unsafe"
 )
 
 
@@ -89,20 +87,4 @@ func GetUserName() string {
 		return "none"
 	}
 	return syscall.UTF16ToString(buf[:sz])
-}
-
-
-func loadDll(fname string) syscall.Handle {
-	h, e := syscall.LoadLibrary(fname)
-	if e != 0 {
-		log.Fatalf("LoadLibrary(%s) failed with err=%d.\n", fname, e)
-	}
-	return h
-}
-func getSysProcAddr(m syscall.Handle, pname string) uintptr {
-	p, e := syscall.GetProcAddress(m, pname)
-	if e != 0 {
-		log.Fatalf("GetProcAddress(%s) failed with err=%d.\n", pname, e)
-	}
-	return uintptr(p)
 }
