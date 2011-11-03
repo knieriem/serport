@@ -1,20 +1,20 @@
 package go9p
 
 import (
+	"go9p.googlecode.com/hg/p"
 	"os"
 	"syscall"
-	"go9p.googlecode.com/hg/p"
 )
 
 // Convert an os.Error to a *p.Error
-func ToError(err os.Error) *p.Error {
+func ToError(err error) *p.Error {
 	var ecode os.Errno
 
 	if err == nil {
 		return nil
 	}
 
-	ename := err.String()
+	ename := err.Error()
 	if e, ok := err.(os.Errno); ok {
 		ecode = e
 	} else {

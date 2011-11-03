@@ -1,10 +1,10 @@
 package sercom
 
 import (
-	"os"
-	"syscall"
-	"path/filepath"
 	sys "github.com/knieriem/g/syscall"
+	"os"
+	"path/filepath"
+	"syscall"
 )
 
 const (
@@ -19,7 +19,7 @@ type hw struct {
 
 // Open a local serial port.
 // Inictl is an optional string containing one ore more commands in Ctl() style
-func Open(filename string, inictl string) (port Port, err os.Error) {
+func Open(filename string, inictl string) (port Port, err error) {
 	var file *os.File
 
 	// NONBLOCK prevents Open from blocking
@@ -63,12 +63,12 @@ func Open(filename string, inictl string) (port Port, err os.Error) {
 	return
 }
 
-func (p *dev) Close() os.Error {
+func (p *dev) Close() error {
 	sys.IoctlTermios(p.Fd(), sys.TCSETSW, &p.tOrig)
 	return p.hw.Close()
 }
 
-func (d *dev) Drain() os.Error {
+func (d *dev) Drain() error {
 	e := sys.IoctlTermios(d.Fd(), sys.TCSETSW, &d.tsav) // drain and set parameters
 	if e != 0 {
 		return d.errno("drain", e)
@@ -80,7 +80,7 @@ func (d *dev) Purge(in, out bool) {
 
 }
 
-func (d *dev) SetBaudrate(val int) (err os.Error) {
+func (d *dev) SetBaudrate(val int) (err error) {
 	if speed, ok := speedMap[val]; !ok {
 		err = d.errorf("open", "unsupported baud rate: %d", val)
 		return
@@ -91,7 +91,7 @@ func (d *dev) SetBaudrate(val int) (err os.Error) {
 	return d.updateCtl()
 }
 
-func (d *dev) SetWordlen(n int) os.Error {
+func (d *dev) SetWordlen(n int) error {
 	t := &d.t
 
 	t.Cflag &^= sys.CSIZE
@@ -110,7 +110,7 @@ func (d *dev) SetWordlen(n int) os.Error {
 	return d.updateCtl()
 }
 
-func (d *dev) SetParity(parity byte) os.Error {
+func (d *dev) SetParity(parity byte) error {
 	t := &d.t
 
 	t.Cflag &^= sys.PARENB | sys.PARODD
@@ -124,7 +124,7 @@ func (d *dev) SetParity(parity byte) os.Error {
 	return d.updateCtl()
 }
 
-func (d *dev) SetStopbits(n int) (err os.Error) {
+func (d *dev) SetStopbits(n int) (err error) {
 	switch n {
 	case 1:
 		d.t.Cflag &^= sys.CSTOPB
@@ -136,14 +136,14 @@ func (d *dev) SetStopbits(n int) (err os.Error) {
 	return d.updateCtl()
 }
 
-func (p *dev) SetRts(on bool) os.Error {
+func (p *dev) SetRts(on bool) error {
 	p.rts = on
 	if on {
 		return p.commfn("set rts", sys.TIOCMBIS, sys.TIOCM_RTS)
 	}
 	return p.commfn("clr rts", sys.TIOCMBIC, sys.TIOCM_RTS)
 }
-func (p *dev) SetDtr(on bool) os.Error {
+func (p *dev) SetDtr(on bool) error {
 	p.dtr = on
 	if on {
 		return p.commfn("set dtr", sys.TIOCMBIS, sys.TIOCM_DTR)
@@ -151,14 +151,14 @@ func (p *dev) SetDtr(on bool) os.Error {
 	return p.commfn("clr dtr", sys.TIOCMBIC, sys.TIOCM_DTR)
 }
 
-func (p *dev) commfn(name string, cmd int, f sys.Int) (err os.Error) {
+func (p *dev) commfn(name string, cmd int, f sys.Int) (err error) {
 	if e := sys.IoctlModem(p.Fd(), cmd, &f); e != 0 {
 		return p.errno(name, e)
 	}
 	return
 }
 
-func (d *dev) SetRtsCts(on bool) os.Error {
+func (d *dev) SetRtsCts(on bool) error {
 	if on {
 		d.t.Cflag |= sys.CRTSCTS
 	} else {
@@ -168,7 +168,7 @@ func (d *dev) SetRtsCts(on bool) os.Error {
 	return d.updateCtl()
 }
 
-func (d *dev) updateCtl() (err os.Error) {
+func (d *dev) updateCtl() (err error) {
 	if d.inCtl {
 		return
 	}

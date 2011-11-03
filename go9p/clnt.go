@@ -1,7 +1,6 @@
 package go9p
 
 import (
-	"os"
 	"go9p.googlecode.com/hg/p"
 	"go9p.googlecode.com/hg/p/clnt"
 )
@@ -21,7 +20,7 @@ type Clnt struct {
 }
 
 // Same as go9p.googlecode.com/hg/p/clnt:Mount, but returning an os.Error
-func Mount(net, addr, aname string, user p.User) (*Clnt, os.Error) {
+func Mount(net, addr, aname string, user p.User) (*Clnt, error) {
 	c, err := clnt.Mount(net, addr, aname, user)
 	return &Clnt{c}, err
 }

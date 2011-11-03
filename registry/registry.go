@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+
+	win "github.com/knieriem/g/syscall"
 	"os"
 	"runtime"
 	"syscall"
-	win "github.com/knieriem/g/syscall"
 )
 
 type Key struct {
@@ -21,7 +22,7 @@ var (
 	KeyCurrentConfig = &Key{win.HKEY_CURRENT_CONFIG}
 )
 
-func (k *Key) Subkey(subkey ...string) (result *Key, err os.Error) {
+func (k *Key) Subkey(subkey ...string) (result *Key, err error) {
 	var key win.HKEY
 
 	s := ""
@@ -132,7 +133,6 @@ type Uint64 struct {
 	value
 }
 
-
 type String struct {
 	value
 }
@@ -146,7 +146,6 @@ func (v *String) String() (s string) {
 	binary.Read(bytes.NewBuffer(data), byteOrder(isLittleEndian), ubuf)
 	return syscall.UTF16ToString(ubuf)
 }
-
 
 const (
 	isLittleEndian = win.REG_DWORD == win.REG_DWORD_LITTLE_ENDIAN

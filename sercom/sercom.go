@@ -1,6 +1,7 @@
 package sercom
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,16 +11,16 @@ import (
 )
 
 type Port interface {
-	Ctl(cmds ...string) os.Error // accepts commands similar to Plan 9's eia#ctl
+	Ctl(cmds ...string) error // accepts commands similar to Plan 9's eia#ctl
 
-	SetBaudrate(int) os.Error
-	SetParity(byte) os.Error  // odd: 'o', even: 'e', otherwise none
-	SetWordlen(int) os.Error  // 5, 6, 7, or 8
-	SetStopbits(int) os.Error // 1 or 2
+	SetBaudrate(int) error
+	SetParity(byte) error  // odd: 'o', even: 'e', otherwise none
+	SetWordlen(int) error  // 5, 6, 7, or 8
+	SetStopbits(int) error // 1 or 2
 
-	SetDtr(bool) os.Error
-	SetRts(bool) os.Error
-	SetRtsCts(bool) os.Error // obey Cts signal, set Rts depending of internal buffer's state
+	SetDtr(bool) error
+	SetRts(bool) error
+	SetRtsCts(bool) error // obey Cts signal, set Rts depending of internal buffer's state
 
 	Delay(ms int)
 
@@ -28,7 +29,7 @@ type Port interface {
 	Record()
 	Commit()
 
-	Drain() os.Error
+	Drain() error
 	Purge(in, out bool)
 
 	io.ReadWriteCloser
@@ -42,7 +43,7 @@ type dev struct {
 	encaps Port
 }
 
-func (p *dev) Ctl(cmds ...string) os.Error {
+func (p *dev) Ctl(cmds ...string) error {
 	updateCtlNow := func() {
 		p.inCtl = false
 		p.updateCtl()
@@ -106,12 +107,12 @@ func (d *dev) Record() {
 func (d *dev) Commit() {
 }
 
-func (p *dev) errno(action string, e int) os.Error {
+func (p *dev) errno(action string, e int) error {
 	return &os.PathError{action, p.name, os.Errno(e)}
 }
 
-func (p *dev) errorf(action string, format string, args ...interface{}) os.Error {
-	err := os.NewError(fmt.Sprintf(format, args...))
+func (p *dev) errorf(action string, format string, args ...interface{}) error {
+	err := errors.New(fmt.Sprintf(format, args...))
 	return &os.PathError{action, p.name, err}
 }
 

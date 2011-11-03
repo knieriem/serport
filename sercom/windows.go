@@ -1,11 +1,12 @@
 package sercom
 
 import (
+	"github.com/knieriem/g/registry"
+
+	win "github.com/knieriem/g/syscall"
 	"os"
 	"path/filepath"
 	"syscall"
-	"github.com/knieriem/g/registry"
-	win "github.com/knieriem/g/syscall"
 )
 
 const (
@@ -24,7 +25,7 @@ type hw struct {
 	}
 }
 
-func Open(file string, inictl string) (p Port, err os.Error) {
+func Open(file string, inictl string) (p Port, err error) {
 	const (
 		access     = syscall.GENERIC_READ | syscall.GENERIC_WRITE
 		sharemode  = 0
@@ -81,7 +82,7 @@ try:
 	return
 }
 
-func (p *dev) Read(buf []byte) (int, os.Error) {
+func (p *dev) Read(buf []byte) (int, error) {
 	var done uint32
 
 	for {
@@ -103,7 +104,7 @@ func (p *dev) Read(buf []byte) (int, os.Error) {
 	return int(done), nil
 }
 
-func (p *dev) Write(buf []byte) (int, os.Error) {
+func (p *dev) Write(buf []byte) (int, error) {
 	var done uint32
 
 	for {
@@ -125,7 +126,7 @@ func (p *dev) Write(buf []byte) (int, os.Error) {
 	return int(done), nil
 }
 
-func (d *dev) Close() (err os.Error) {
+func (d *dev) Close() (err error) {
 	d.Drain()
 	syscall.CloseHandle(d.ev.r)
 	syscall.CloseHandle(d.ev.w)
@@ -135,7 +136,7 @@ func (d *dev) Close() (err os.Error) {
 	return nil
 }
 
-func (d *dev) Drain() (err os.Error) {
+func (d *dev) Drain() (err error) {
 	if e := win.FlushFileBuffers(d.fd); e != 0 {
 		err = d.errno("drain", e)
 	}
@@ -146,12 +147,12 @@ func (d *dev) Purge(in, out bool) {
 	// TBD
 }
 
-func (d *dev) SetBaudrate(val int) os.Error {
+func (d *dev) SetBaudrate(val int) error {
 	d.dcb.BaudRate = uint32(val)
 	return d.updateCtl()
 }
 
-func (d *dev) SetWordlen(n int) os.Error {
+func (d *dev) SetWordlen(n int) error {
 	switch n {
 	case 5, 6, 7, 8:
 		d.dcb.ByteSize = uint8(n)
@@ -159,7 +160,7 @@ func (d *dev) SetWordlen(n int) os.Error {
 	return d.updateCtl()
 }
 
-func (d *dev) SetParity(val byte) os.Error {
+func (d *dev) SetParity(val byte) error {
 	p := &d.dcb.Parity
 	switch val {
 	case 'o':
@@ -172,7 +173,7 @@ func (d *dev) SetParity(val byte) os.Error {
 	return d.updateCtl()
 }
 
-func (d *dev) SetStopbits(n int) os.Error {
+func (d *dev) SetStopbits(n int) error {
 	switch n {
 	case 1:
 		d.dcb.StopBits = win.ONESTOPBIT
@@ -184,7 +185,7 @@ func (d *dev) SetStopbits(n int) os.Error {
 	return d.updateCtl()
 }
 
-func (d *dev) SetRts(on bool) (err os.Error) {
+func (d *dev) SetRts(on bool) (err error) {
 	d.rts = on
 	setRtsFlags(&d.dcb, on)
 	if !d.initDone {
@@ -197,7 +198,7 @@ func (d *dev) SetRts(on bool) (err os.Error) {
 	return d.commfn("clr rts", win.CLRRTS)
 }
 
-func (d *dev) SetDtr(on bool) (err os.Error) {
+func (d *dev) SetDtr(on bool) (err error) {
 	d.dtr = on
 	setDtrFlags(&d.dcb, on)
 	if !d.initDone {
@@ -210,14 +211,14 @@ func (d *dev) SetDtr(on bool) (err os.Error) {
 	return d.commfn("clr dtr", win.CLRDTR)
 }
 
-func (d *dev) commfn(name string, f int) (err os.Error) {
+func (d *dev) commfn(name string, f int) (err error) {
 	if e := win.EscapeCommFunction(d.fd, uint32(f)); e != 0 {
 		return &os.PathError{name, d.name, os.Errno(e)}
 	}
 	return
 }
 
-func (d *dev) SetRtsCts(on bool) os.Error {
+func (d *dev) SetRtsCts(on bool) error {
 	dcb := &d.dcb
 
 	if on {
@@ -248,7 +249,7 @@ func setDtrFlags(dcb *win.DCB, on bool) {
 	}
 }
 
-func (d *dev) updateCtl() (err os.Error) {
+func (d *dev) updateCtl() (err error) {
 	if d.inCtl {
 		return
 	}

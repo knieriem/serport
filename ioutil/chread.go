@@ -2,13 +2,12 @@ package ioutil
 
 import (
 	"io"
-	"os"
 	"log"
 )
 
 type data struct {
 	Data []byte
-	Err  os.Error
+	Err  error
 }
 
 type RdChannels struct {

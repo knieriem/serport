@@ -11,18 +11,19 @@ package xbm
 
 import (
 	"bufio"
-	"io"
-	"os"
-	"strings"
-	"strconv"
-	"image"
+	"errors"
+
 	img "github.com/knieriem/g/image"
+	"image"
+	"io"
+	"strconv"
+	"strings"
 )
 
 // If the io.Reader does not also have ReadLine, then decode will introduce its own buffering.
 type reader interface {
 	io.Reader
-	ReadLine() (line []byte, isPrefix bool, err os.Error)
+	ReadLine() (line []byte, isPrefix bool, err error)
 }
 
 // decoder is the type used to decode an XBM file.
@@ -36,13 +37,13 @@ type decoder struct {
 }
 
 // decode reads an X11 bitmap from r and stores the result in d.
-func (d *decoder) decode(r io.Reader, configOnly bool) (im *img.Bitmap, err os.Error) {
+func (d *decoder) decode(r io.Reader, configOnly bool) (im *img.Bitmap, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			if s, ok := r.(string); ok {
-				err = os.NewError("xbm:" + s)
+				err = errors.New("xbm:" + s)
 			} else {
-				err = r.(os.Error)
+				err = r.(error)
 			}
 		}
 	}()
@@ -78,7 +79,7 @@ func (d *decoder) decode(r io.Reader, configOnly bool) (im *img.Bitmap, err os.E
 	return
 
 malformed:
-	return nil, os.NewError("xbm: data probably malformed")
+	return nil, errors.New("xbm: data probably malformed")
 }
 
 func (d *decoder) readHeader() {
@@ -170,14 +171,14 @@ func unhex(h byte) (b uint8) {
 
 // Decode reads an XBM image from r and returns the first embedded
 // image as an image.Image.
-func Decode(r io.Reader) (im image.Image, err os.Error) {
+func Decode(r io.Reader) (im image.Image, err error) {
 	var d decoder
 	return d.decode(r, false)
 }
 
 // DecodeConfig returns the color model and dimensions of an XBM image
 // without decoding the entire image.
-func DecodeConfig(r io.Reader) (ic image.Config, err os.Error) {
+func DecodeConfig(r io.Reader) (ic image.Config, err error) {
 	var d decoder
 	if _, err = d.decode(r, true); err == nil {
 		ic = image.Config{img.BinaryColorModel, d.width, d.height}

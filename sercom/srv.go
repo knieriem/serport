@@ -1,14 +1,13 @@
 package sercom
 
 import (
-	"os"
 	"strings"
 	"sync"
 
-	"go9p.googlecode.com/hg/p"
-	"go9p.googlecode.com/hg/p/srv"
 	"github.com/knieriem/g/go9p"
 	"github.com/knieriem/g/ioutil"
+	"go9p.googlecode.com/hg/p"
+	"go9p.googlecode.com/hg/p/srv"
 )
 
 var (
@@ -41,7 +40,7 @@ func (*file) Wstat(*srv.FFid, *p.Dir) *p.Error {
 }
 
 func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
-	var err os.Error
+	var err error
 
 	for _, cmd := range strings.Fields(string(buf)) {
 		switch cmd {
@@ -73,7 +72,7 @@ func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
 }
 
 func (d *data) Read(fid *srv.FFid, buf []byte, offset uint64) (n int, e9 *p.Error) {
-	var err os.Error
+	var err error
 
 	d.m.Lock()
 	defer d.m.Unlock()
@@ -115,7 +114,7 @@ func (d *data) Clunk(f *srv.FFid) *p.Error {
 // Serve a previously opened serial device via 9P.
 // `addr' shoud be of form "host:port", where host
 // may be missing.
-func Serve9P(addr string, dev Port) (err os.Error) {
+func Serve9P(addr string, dev Port) (err error) {
 	user := go9p.CurrentUser()
 	root := new(srv.File)
 	err = root.Add(nil, "/", user, nil, p.DMDIR|0555, nil)

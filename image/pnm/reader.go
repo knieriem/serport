@@ -11,10 +11,10 @@ package pnm
 
 import (
 	"bufio"
+	"errors"
 	"image"
 	"image/color"
 	"io"
-	"os"
 )
 
 const (
@@ -52,14 +52,14 @@ type decoder struct {
 }
 
 // decode reads a PNM image from r and stores the result in d.
-func (d *decoder) decode(r io.Reader, configOnly bool) (err os.Error) {
+func (d *decoder) decode(r io.Reader, configOnly bool) (err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
 			if s, ok := r.(string); ok {
-				err = os.NewError("pnm:" + s)
+				err = errors.New("pnm:" + s)
 			} else {
-				err = r.(os.Error)
+				err = r.(error)
 			}
 		}
 	}()
@@ -175,7 +175,7 @@ func (d *decoder) unreadByte() {
 
 // Decode reads a PBM image from r and returns the first embedded
 // image as an image.Image.
-func Decode(r io.Reader) (image.Image, os.Error) {
+func Decode(r io.Reader) (image.Image, error) {
 	var d decoder
 	if err := d.decode(r, false); err != nil {
 		return nil, err
@@ -185,7 +185,7 @@ func Decode(r io.Reader) (image.Image, os.Error) {
 
 // DecodeConfig returns the color model and dimensions of a PBM image
 // without decoding the entire image.
-func DecodeConfig(r io.Reader) (image.Config, os.Error) {
+func DecodeConfig(r io.Reader) (image.Config, error) {
 	var d decoder
 	if err := d.decode(r, true); err != nil {
 		return image.Config{}, err

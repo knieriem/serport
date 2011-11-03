@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+	"github.com/knieriem/g/sercom"
 	"io"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
-	"github.com/knieriem/g/sercom"
 )
 
 var (
@@ -20,12 +20,12 @@ var (
 )
 
 func main() {
-	var err os.Error
+	var err error
 	var port sercom.Port
 
 	flag.Parse()
 	log.SetFlags(log.Lshortfile)
-	cherr = make(chan os.Error)
+	cherr = make(chan error)
 
 	sercom.Debug = *debug
 	sercom.Debugall = *debugall
@@ -58,7 +58,7 @@ func main() {
 
 	select {
 	case err = <-cherr:
-		if err != os.EOF {
+		if err != io.EOF {
 			log.Println(err)
 		}
 	case sig := <-signal.Incoming:
@@ -68,12 +68,12 @@ func main() {
 	os.Exit(0)
 }
 
-var cherr chan os.Error
+var cherr chan error
 
 func copyproc(to io.Writer, from io.Reader) {
 	var (
 		buf = make([]byte, 1024)
-		err os.Error
+		err error
 		n   int
 	)
 
