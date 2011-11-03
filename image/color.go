@@ -4,7 +4,6 @@ import (
 	"image/color"
 )
 
-
 // A BinaryColor represents either black or white.
 type BinaryColor struct {
 	Black bool

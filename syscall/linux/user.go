@@ -4,7 +4,6 @@ package syscall
 // #include <pwd.h>
 import "C"
 
-
 func GetUserName() string {
 	pw := C.getpwuid(C.getuid())
 	if pw == nil {

@@ -11,7 +11,6 @@ const (
 	initDefault = "b115200 l8 pn s1"
 )
 
-
 type hw struct {
 	*os.File
 	inCtl          bool
@@ -169,7 +168,6 @@ func (d *dev) SetRtsCts(on bool) os.Error {
 	return d.updateCtl()
 }
 
-
 func (d *dev) updateCtl() (err os.Error) {
 	if d.inCtl {
 		return
@@ -200,7 +198,6 @@ func (p *dev) ModemLines() LineState {
 	var ls LineState
 	return ls
 }
-
 
 var speedMap = map[int]int{
 	50:      sys.B50,
@@ -244,7 +241,6 @@ func setBlocking(fd int) (errno int) {
 	}
 	return
 }
-
 
 // Get a list of (probably) present serial devices
 func DeviceList() (list []string) {

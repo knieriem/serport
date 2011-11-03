@@ -30,7 +30,6 @@ type format struct {
 	decode     func(r io.Reader, w, h, maxval int) image.Image
 }
 
-
 // If the io.Reader does not also have (Un)ReadByte, then decode will introduce its own buffering.
 type reader interface {
 	io.Reader
@@ -173,7 +172,6 @@ func (d *decoder) unreadByte() {
 		panic(err)
 	}
 }
-
 
 // Decode reads a PBM image from r and returns the first embedded
 // image as an image.Image.

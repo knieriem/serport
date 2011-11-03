@@ -168,7 +168,6 @@ func unhex(h byte) (b uint8) {
 	return flipped[b]
 }
 
-
 // Decode reads an XBM image from r and returns the first embedded
 // image as an image.Image.
 func Decode(r io.Reader) (im image.Image, err os.Error) {

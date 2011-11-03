@@ -146,7 +146,6 @@ func (d *dev) Purge(in, out bool) {
 	// TBD
 }
 
-
 func (d *dev) SetBaudrate(val int) os.Error {
 	d.dcb.BaudRate = uint32(val)
 	return d.updateCtl()
@@ -184,7 +183,6 @@ func (d *dev) SetStopbits(n int) os.Error {
 	}
 	return d.updateCtl()
 }
-
 
 func (d *dev) SetRts(on bool) (err os.Error) {
 	d.rts = on
@@ -250,7 +248,6 @@ func setDtrFlags(dcb *win.DCB, on bool) {
 	}
 }
 
-
 func (d *dev) updateCtl() (err os.Error) {
 	if d.inCtl {
 		return
@@ -272,13 +269,11 @@ func (d *dev) updateCtl() (err os.Error) {
 	return
 }
 
-
 func (d *dev) ModemLines() LineState {
 	var ls LineState
 	// TBD
 	return ls
 }
-
 
 // Get a list of (probably) present serial devices
 func DeviceList() (list []string) {

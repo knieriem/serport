@@ -53,7 +53,6 @@ func (d *dev9) Close() os.Error {
 	return nil
 }
 
-
 type fdev struct {
 	data      io.ReadWriteCloser
 	ctl       io.WriteCloser

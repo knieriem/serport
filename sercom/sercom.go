@@ -34,7 +34,6 @@ type Port interface {
 	io.ReadWriteCloser
 }
 
-
 type dev struct {
 	name     string
 	inCtl    bool
