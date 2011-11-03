@@ -8,6 +8,7 @@ GOFILES=\
 
 DIRS=\
 	pnm\
+	xbm\
 
 include $(GOROOT)/src/Make.pkg
 include ../Make.dirs
