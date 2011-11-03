@@ -4,7 +4,7 @@
 pkg=$PKG
 
 CC=/usr/bin/i586-mingw32msvc-gcc
-mksyscall=$GOROOT/src/pkg/syscall/mksyscall_windows.sh
+mksyscall=$GOROOT/src/pkg/syscall/mksyscall_windows.pl
 
 case $GOARCH in
 386)
@@ -21,12 +21,13 @@ esac
 
 SFX=_$GOARCH.go
 
-$mksyscall $pkg.go |
+perl $mksyscall $pkg.go |
 	sed 's/^package.*syscall$/package '$PKG'/' |
 	sed '/^import/a \
 		import "syscall"' |
 	sed '/import *"DISABLEDunsafe"/d' |
 	sed 's/Syscall/syscall.Syscall/' |
+	sed 's/NewLazyDLL/syscall.&/' |
 	sed 's/EINVAL/syscall.EINVAL/' |
 	gofmt > z$pkg$SFX
 

@@ -1,6 +1,6 @@
 pkg=syscall
 
-mksyscall=$GOROOT/src/pkg/syscall/mksyscall.sh
+mksyscall=$GOROOT/src/pkg/syscall/mksyscall.pl
 
 ARCH=$GOARCH
 
@@ -14,7 +14,7 @@ amd64)
 esac
 
 
-$mksyscall $pkg.go |
+perl $mksyscall $pkg.go |
 	sed 's/^package.*syscall$$/package $*/' |
 	sed '/^import/a \
 		import "syscall"' |
