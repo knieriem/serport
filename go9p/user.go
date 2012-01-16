@@ -2,7 +2,7 @@ package go9p
 
 import (
 	"github.com/knieriem/g/syscall"
-	"go9p.googlecode.com/hg/p"
+	"code.google.com/p/go9p/p"
 	"os"
 )
 

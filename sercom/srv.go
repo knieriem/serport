@@ -6,8 +6,8 @@ import (
 
 	"github.com/knieriem/g/go9p"
 	"github.com/knieriem/g/ioutil"
-	"go9p.googlecode.com/hg/p"
-	"go9p.googlecode.com/hg/p/srv"
+	"code.google.com/p/go9p/p"
+	"code.google.com/p/go9p/p/srv"
 )
 
 var (

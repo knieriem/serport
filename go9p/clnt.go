@@ -1,8 +1,8 @@
 package go9p
 
 import (
-	"go9p.googlecode.com/hg/p"
-	"go9p.googlecode.com/hg/p/clnt"
+	"code.google.com/p/go9p/p"
+	"code.google.com/p/go9p/p/clnt"
 )
 
 const (
