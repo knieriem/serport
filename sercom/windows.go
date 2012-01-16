@@ -39,13 +39,13 @@ func Open(file string, inictl string) (p Port, err error) {
 	}
 
 	fd, e := syscall.CreateFile(syscall.StringToUTF16Ptr(file), access, sharemode, nil, createmode, flags, 0)
-	if e != 0 {
+	if e != nil {
 		goto error
 	}
 
 	goto try
 error:
-	err = &os.PathError{"open", file, os.Errno(e)}
+	err = &os.PathError{"open", file, e}
 	return
 
 try:
