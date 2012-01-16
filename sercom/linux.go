@@ -182,7 +182,7 @@ func (d *dev) updateCtl() (err error) {
 		return
 	}
 	if e := sys.IoctlTermios(d.Fd(), sys.TCSETSW, t); e != 0 { // drain and set parameters
-		err = os.Errno(e)
+		err = syscall.Errno(e)
 	} else {
 		d.tsav = d.t
 

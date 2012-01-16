@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	win "github.com/knieriem/g/syscall"
-	"os"
 	"runtime"
 	"syscall"
 )
@@ -34,7 +33,7 @@ func (k *Key) Subkey(subkey ...string) (result *Key, err error) {
 		}
 	}
 	if e := win.RegOpenKeyEx(k.HKEY, syscall.StringToUTF16Ptr(s), 0, win.KEY_READ, &key); e != 0 {
-		err = os.Errno(e)
+		err = syscall.Errno(e)
 	} else {
 		result = &Key{key}
 		runtime.SetFinalizer(result, (*Key).Close)
