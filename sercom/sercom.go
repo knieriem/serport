@@ -99,7 +99,7 @@ func (p *dev) Ctl(cmds ...string) error {
 
 func (d *dev) Delay(ms int) {
 	d.Drain()
-	time.Sleep(int64(ms) * 1e6)
+	time.Sleep(time.Duration(ms) * time.Millisecond)
 }
 
 func (d *dev) Record() {
