@@ -34,9 +34,8 @@ func (k *Key) Subkey(subkey ...string) (result *Key, err error) {
 			s += v
 		}
 	}
-	if e := win.RegOpenKeyEx(k.HKEY, syscall.StringToUTF16Ptr(s), 0, win.KEY_READ, &key); e != 0 {
-		err = syscall.Errno(e)
-	} else {
+	err = win.RegOpenKeyEx(k.HKEY, syscall.StringToUTF16Ptr(s), 0, win.KEY_READ, &key)
+	if err != nil {
 		result = &Key{key}
 		runtime.SetFinalizer(result, (*Key).Close)
 	}
@@ -69,8 +68,8 @@ func (k *Key) Values() (vmap map[string]Value) {
 
 	for i := 0; ; i++ {
 		ulen = uint32(len(ubuf))
-		e := win.RegEnumValue(k.HKEY, uint32(i), &ubuf[0], &ulen, nil, &typ, nil, &sz)
-		if e != 0 {
+		err := win.RegEnumValue(k.HKEY, uint32(i), &ubuf[0], &ulen, nil, &typ, nil, &sz)
+		if err != nil {
 			break
 		}
 		s := syscall.UTF16ToString(ubuf[:ulen])
@@ -100,7 +99,7 @@ type Binary struct {
 func (v *value) Data() (data []byte) {
 	data = make([]byte, v.sz)
 	sz := uint32(v.sz)
-	if e := win.RegQueryValueEx(v.HKEY, &v.name[0], nil, nil, &data[0], &sz); e == 0 {
+	if err := win.RegQueryValueEx(v.HKEY, &v.name[0], nil, nil, &data[0], &sz); err == nil {
 		data = data[:sz]
 	} else {
 		data = []byte{}
