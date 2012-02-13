@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/knieriem/g/sercom"
+	"github.com/knieriem/g/signal"
 	"io"
 	"log"
 	"os"
-	"os/signal"
 	"strings"
 )
 
@@ -40,7 +40,7 @@ func main() {
 	if strings.Index(*dev, ":") != -1 {
 		port, err = sercom.Connect9P(*dev, "")
 	} else {
-		if fi, e := os.Stat(*dev); e == nil && fi.IsDirectory() {
+		if fi, e := os.Stat(*dev); e == nil && fi.IsDir() {
 			port, err = sercom.OpenFsDev(*dev)
 		} else {
 			port, err = sercom.Open(*dev, strings.Join(flag.Args(), " "))
