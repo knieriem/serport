@@ -8,7 +8,7 @@
 
 *	__go9p__
 
-	Utility functions and types for [go9p][]
+	Utility functions for [go9p][]
 
 
 *	__text__
@@ -50,46 +50,25 @@
 
 ## Installation
 
-Since `goinstall` cannot cope with GOOS dependent source files yet, the following
-commands can be used instead to install and build the packages:
+Using the new Go tool, single packages along with their dependencies
+can be installed by running
 
-	cd $GOROOT/src/pkg
-	mkdir -p github.com/knieriem
-	cd github.com/knieriem
+	go get github.com/knieriem/g/PACKAGE
 
-Clone repository using Mercurial (utilizing the [hg-git][] extension):
+For instance,
 
-	hg clone git://github.com/knieriem/g
+	go get github.com/knieriem/g/sercom
 
-... or using Git:
+will install the serial port package, and it will make sure that
+its dependencies
 
-	git clone https://github.com/knieriem/g.git
+	code.google.com/p/go9p/p
+	code.google.com/p/go9p/p/clnt
+	code.google.com/p/go9p/p/srv
+	github.com/knieriem/g/syscall
+	github.com/knieriem/g/go9p/user
+	github.com/knieriem/g/ioutil
 
+are present and installed too.
 
-Install prerequisites (Go 9P implementation):
-
-	goinstall go9p.googlecode.com/hg/p
-	goinstall go9p.googlecode.com/hg/p/clnt
-	goinstall go9p.googlecode.com/hg/p/srv
-
-Then,
-
-	cd g
-	make
-
-Directory `examples' contains some programs making use of the packages.
-
-I build everything on a 386 machine running Linux, also the windows
-packages and binaries. A little `rc` script containing the lines
-
-	#!/usr/local/plan9/bin/rc
-	
-	GOOS=windows
-	GOBIN=$GOROOT/bin/$GOOS
-	path=($GOBIN $path)
-	prompt=(W-$prompt(1) $prompt(2))
-	exec rc
-
-helps switching between windows and host targets.
-
-
+Directory `examples' contains programs making use of some of the packages.
