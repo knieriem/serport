@@ -35,7 +35,7 @@ func (k *Key) Subkey(subkey ...string) (result *Key, err error) {
 		}
 	}
 	err = win.RegOpenKeyEx(k.HKEY, syscall.StringToUTF16Ptr(s), 0, win.KEY_READ, &key)
-	if err != nil {
+	if err == nil {
 		result = &Key{key}
 		runtime.SetFinalizer(result, (*Key).Close)
 	}
