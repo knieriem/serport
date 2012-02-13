@@ -1,44 +1,78 @@
-// godefs -g syscall -f-m32 -c /usr/bin/i586-mingw32msvc-gcc types.c
+// Created by cgo -godefs - DO NOT EDIT
+// cgo -godefs windows/types.go
 
-// MACHINE GENERATED - DO NOT EDIT.
-
+//line windows/types.go:1
 package syscall
 
-// Constants
+//line windows/types.go:21
+
+//line windows/types.go:20
+type DCB struct {
+	//line windows/types.go:20
+	DCBlength uint32
+	//line windows/types.go:20
+	BaudRate uint32
+	//line windows/types.go:20
+	Flags uint32
+	//line windows/types.go:20
+	WReserved uint16
+	//line windows/types.go:20
+	XonLim uint16
+	//line windows/types.go:20
+	XoffLim uint16
+	//line windows/types.go:20
+	ByteSize uint8
+	//line windows/types.go:20
+	Parity uint8
+	//line windows/types.go:20
+	StopBits uint8
+	//line windows/types.go:20
+	XonChar int8
+	//line windows/types.go:20
+	XoffChar int8
+	//line windows/types.go:20
+	ErrorChar int8
+	//line windows/types.go:20
+	EofChar int8
+	//line windows/types.go:20
+	EvtChar int8
+	//line windows/types.go:20
+	WReserved1 uint16
+	//line windows/types.go:20
+}
+
+//line windows/types.go:23
+
+//line windows/types.go:22
+type CommTimeouts struct {
+	//line windows/types.go:22
+	ReadIntervalTimeout uint32
+	//line windows/types.go:22
+	ReadTotalTimeoutMultiplier uint32
+	//line windows/types.go:22
+	ReadTotalTimeoutConstant uint32
+	//line windows/types.go:22
+	WriteTotalTimeoutMultiplier uint32
+	//line windows/types.go:22
+	WriteTotalTimeoutConstant uint32
+	//line windows/types.go:22
+}
+
+//line windows/types.go:25
+
+//line windows/types.go:24
 const (
-	dcbSize             = 0x1c
+	dcbSize = 0x1c
+	//line windows/types.go:28
+
+	//line windows/types.go:27
 	HKEY_CLASSES_ROOT   = (1 << 32) - 0x80000000
 	HKEY_CURRENT_CONFIG = (1 << 32) - 0x7ffffffb
 	HKEY_CURRENT_USER   = (1 << 32) - 0x7fffffff
 	HKEY_LOCAL_MACHINE  = (1 << 32) - 0x7ffffffe
 )
 
-// Types
+//line windows/types.go:34
 
-type DCB struct {
-	DCBlength  uint32
-	BaudRate   uint32
-	Flags      uint32
-	WReserved  uint16
-	XonLim     uint16
-	XoffLim    uint16
-	ByteSize   uint8
-	Parity     uint8
-	StopBits   uint8
-	XonChar    int8
-	XoffChar   int8
-	ErrorChar  int8
-	EofChar    int8
-	EvtChar    int8
-	WReserved1 uint16
-}
-
-type CommTimeouts struct {
-	ReadIntervalTimeout         uint32
-	ReadTotalTimeoutMultiplier  uint32
-	ReadTotalTimeoutConstant    uint32
-	WriteTotalTimeoutMultiplier uint32
-	WriteTotalTimeoutConstant   uint32
-}
-
+//line windows/types.go:33
 type REGSAM uint32

@@ -1,23 +1,38 @@
-// godefs -g syscall -f-m32 types.c
+// Created by cgo -godefs - DO NOT EDIT
+// cgo -godefs linux/types.go
 
-// MACHINE GENERATED - DO NOT EDIT.
-
+//line linux/types.go:2
 package syscall
 
-// Constants
+//line linux/types.go:14
 
-// Types
-
+//line linux/types.go:13
 type Termios struct {
-	Iflag        uint32
-	Oflag        uint32
-	Cflag        uint32
-	Lflag        uint32
-	Line         uint8
-	Cc           [32]uint8
-	Pad_godefs_0 [3]byte
-	Ispeed       uint32
-	Ospeed       uint32
+	//line linux/types.go:13
+	Iflag uint32
+	//line linux/types.go:13
+	Oflag uint32
+	//line linux/types.go:13
+	Cflag uint32
+	//line linux/types.go:13
+	Lflag uint32
+	//line linux/types.go:13
+	Line uint8
+	//line linux/types.go:13
+	Cc [32]uint8
+	//line linux/types.go:13
+	Pad_cgo_0 [3]byte
+	//line linux/types.go:13
+	Ispeed uint32
+	//line linux/types.go:13
+	Ospeed uint32
+	//line linux/types.go:13
 }
-
 type Int int32
+
+//line linux/types.go:16
+
+//line linux/types.go:15
+const (
+	Hoho = 0xf0000001
+)

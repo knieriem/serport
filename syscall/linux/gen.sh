@@ -1,44 +1,40 @@
 pkg=syscall
+OS=$GOOS
+ARCH=$GOARCH
 
 mksyscall=$GOROOT/src/pkg/syscall/mksyscall.pl
 
-ARCH=$GOARCH
-
-case $ARCH in
-386)
-	f=-m32
-	;;
-amd64)
-	f=-m64
-	;;
-esac
-
-
-perl $mksyscall $pkg.go |
+perl $mksyscall ${pkg}_$OS.go |
 	sed 's/^package.*syscall$$/package $*/' |
 	sed '/^import/a \
 		import "syscall"' |
 	sed 's/Syscall/syscall.Syscall/' |
 	sed 's/SYS_/syscall.SYS_/' |
-	gofmt > z${pkg}_$ARCH.go
+	gofmt > z${pkg}_${OS}_$ARCH.go
 
-godefs -g $pkg -f$f types.c  |
-	gofmt >ztypes_$ARCH.go
+# note: cgo execution depends on $GOARCH value
+cgo -godefs $OS/types.go  |
+	gofmt >ztypes_${OS}_$ARCH.go
 
 
 (
 	cat <<EOF
+package $pkg
+/*
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>
-enum {
+*/
+import "C"
+
+const (
 EOF
-	<const awk '
-		/^[^\/]/ { print "$" $1 "= " $1 "," ; next}
+	<$OS/const awk '
+		/^[^\/]/ { print "\t" $1 "= C." $1 ; next}
 		{ print }
 	'
-	echo '};'
-) > ,,const.c
+	echo ')'
+) > ,,const.go
 
-godefs -g $pkg -f$f ,,const.c | gofmt > zconst_$ARCH.go
-rm -f ,,const.c
+cgo -godefs ,,const.go | gofmt > zconst_${OS}_$ARCH.go
+rm -f ,,const.go

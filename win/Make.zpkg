@@ -4,13 +4,13 @@ endif
 include $(GOROOT)/src/Make.pkg
 
 
-ifndef ZDIR
-	ZDIR :=$(shell d=.; while ! test -f Make.zpkg; do cd ..; d=$$d/..; done; echo $$d)
+ifndef WIN_ZDIR
+	WIN_ZDIR :=$(shell d=.; while ! test -f Make.zpkg; do cd ..; d=$$d/..; done; echo $$d)
 endif
 
 
 z%.go: $(PKG).go
-	GOARCH=386 PKG=$(PKG) ZDIR=$(ZDIR) sh $(ZDIR)/gen.sh
+	GOARCH=386 PKG=$(PKG) ZDIR=$(WIN_ZDIR) sh $(WIN_ZDIR)/gen.sh
 
 zclean:
 	rm -f z*.go

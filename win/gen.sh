@@ -2,16 +2,18 @@
 #	PKG, ZDIR, GOARCH
 
 pkg=$PKG
+OS=$GOOS
 
-CC=/usr/bin/i586-mingw32msvc-gcc
 mksyscall=$GOROOT/src/pkg/syscall/mksyscall_windows.pl
 
 case $GOARCH in
 386)
-	f=-m32
+	gccarch=i586
+	arch=-l32
 	;;
 amd64)
-	f=-m64
+	gccarch=amd64
+	arch=
 	;;
 *)
 	echo GOARCH $GOARCH not supported
@@ -19,9 +21,11 @@ amd64)
 	;;
 esac
 
-SFX=_$GOARCH.go
+GCC=/usr/bin/$gccarch-mingw32msvc-gcc
 
-perl $mksyscall $pkg.go |
+SFX=_${OS}_$GOARCH.go
+
+perl $mksyscall $arch ${pkg}_$OS.go |
 	sed 's/^package.*syscall$/package '$PKG'/' |
 	sed '/^import/a \
 		import "syscall"' |
@@ -31,22 +35,39 @@ perl $mksyscall $pkg.go |
 	sed 's/EINVAL/syscall.EINVAL/' |
 	gofmt > z$pkg$SFX
 
+if test -f $OS/types.go; then
+	# note: cgo execution depends on $GOARCH value
+	GCC=$GCC cgo -godefs $OS/types.go  |
+		sed '/Pad_cgo_0/c\
+		Flags	uint32' |
+		awk -f $ZDIR/fixtype.awk |
+		gofmt >ztypes$SFX
+fi
 
-godefs -g $pkg -f$f -c $CC types.c  |
-	sed '/Pad_godefs_0/c\
-	Flags	uint32' |
-	awk -f $ZDIR/fixtype.awk |
-	gofmt >ztypes$SFX
-
+if test -f $OS/const; then :
+else
+	exit 0
+fi
 
 (
-	echo '#include "c.h"'
-	echo 'enum {'
-	sed '/^[^/]/ s/.*/	$& = &,/' < const
-	echo '};'
-) > ,,const.c
+	cat <<EOF
+package $pkg
 
-godefs -g $pkg -c $CC ,,const.c |
+/*
+#include "$OS/c.h"
+*/
+import "C"
+
+const (
+EOF
+	<$OS/const awk '
+		/^[^\/]/ { print "\t" $1 "= C." $1 ; next}
+		{ print }
+	'
+	echo ')'
+) > ,,const.go
+
+GCC=$GCC cgo -godefs ,,const.go |
 	awk -f $ZDIR/fixtype.awk |
 	gofmt > zconst$SFX
-rm -f ,,const.c
+rm -f ,,const.go
