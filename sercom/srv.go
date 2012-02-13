@@ -35,11 +35,11 @@ type file struct {
 	srv.File
 }
 
-func (*file) Wstat(*srv.FFid, *p.Dir) *p.Error {
+func (*file) Wstat(*srv.FFid, *p.Dir) error {
 	return nil
 }
 
-func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
+func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, error) {
 	var err error
 
 	for _, cmd := range strings.Fields(string(buf)) {
@@ -68,12 +68,10 @@ func (c *ctl) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
 			break
 		}
 	}
-	return len(buf), go9p.ToError(err)
+	return len(buf), err
 }
 
-func (d *data) Read(fid *srv.FFid, buf []byte, offset uint64) (n int, e9 *p.Error) {
-	var err error
-
+func (d *data) Read(fid *srv.FFid, buf []byte, offset uint64) (n int, err error) {
 	d.m.Lock()
 	defer d.m.Unlock()
 
@@ -91,15 +89,13 @@ func (d *data) Read(fid *srv.FFid, buf []byte, offset uint64) (n int, e9 *p.Erro
 		n = 0
 	}
 	d.fid = nil
-	e9 = go9p.ToError(err)
 	return
 }
-func (d *data) Write(fid *srv.FFid, buf []byte, offset uint64) (int, *p.Error) {
-	n, err := d.dev.Write(buf)
-	return n, go9p.ToError(err)
+func (d *data) Write(fid *srv.FFid, buf []byte, offset uint64) (int, error) {
+	return d.dev.Write(buf)
 }
 
-func (d *data) Clunk(f *srv.FFid) *p.Error {
+func (d *data) Clunk(f *srv.FFid) error {
 	if f.Fid == d.fid {
 		// The fid is clunked while a Tread is outstanding.
 		// Unblock data.Read() so that the Rread can be sent.
