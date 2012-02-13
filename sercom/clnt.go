@@ -3,14 +3,16 @@ package sercom
 import (
 	"errors"
 
-	p "github.com/knieriem/g/go9p"
+	"code.google.com/p/go9p/p"
+	"code.google.com/p/go9p/p/clnt"
+	"github.com/knieriem/g/go9p/user"
 	"io"
 	"os"
 	"strconv"
 )
 
 type dev9 struct {
-	clnt *p.Clnt
+	clnt *clnt.Clnt
 	fdev
 }
 
@@ -22,7 +24,7 @@ type dev9 struct {
 // be "", if ctl and data files live in the 9P servers
 // root directory
 func Connect9P(addr, basename string) (port Port, err error) {
-	c, err := p.Mount("tcp", addr, "", p.CurrentUser())
+	c, err := clnt.Mount("tcp", addr, "", user.Current())
 	if err != nil {
 		return
 	}

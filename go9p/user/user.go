@@ -1,4 +1,5 @@
-package go9p
+// A simple implementation of go9p's User interface
+package user
 
 import (
 	"github.com/knieriem/g/syscall"
@@ -11,7 +12,7 @@ type user struct {
 	id   int
 }
 
-func CurrentUser() p.User {
+func Current() p.User {
 	return &user{syscall.GetUserName(), os.Getuid()}
 }
 
