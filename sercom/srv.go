@@ -4,7 +4,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/knieriem/g/go9p"
+	"github.com/knieriem/g/go9p/user"
 	"github.com/knieriem/g/ioutil"
 	"code.google.com/p/go9p/p"
 	"code.google.com/p/go9p/p/srv"
@@ -111,7 +111,7 @@ func (d *data) Clunk(f *srv.FFid) error {
 // `addr' shoud be of form "host:port", where host
 // may be missing.
 func Serve9P(addr string, dev Port) (err error) {
-	user := go9p.CurrentUser()
+	user := user.Current()
 	root := new(srv.File)
 	err = root.Add(nil, "/", user, nil, p.DMDIR|0555, nil)
 	if err != nil {
@@ -120,7 +120,7 @@ func Serve9P(addr string, dev Port) (err error) {
 
 	c := new(ctl)
 	c.dev = dev
-	err = c.Add(root, "ctl", user, nil, 0664, c)
+	err = c.Add(root, "ctl", user, nil, 0666, c)
 	if err != nil {
 		return
 	}
@@ -130,7 +130,7 @@ func Serve9P(addr string, dev Port) (err error) {
 	d.rch = ioutil.ChannelizeReader(dev, nil)
 	d.unblockch = make(chan bool)
 	c.dataUnblockch = d.unblockch
-	err = d.Add(root, "data", user, nil, 0664, d)
+	err = d.Add(root, "data", user, nil, 0666, d)
 	if err != nil {
 		return
 	}
