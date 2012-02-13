@@ -32,14 +32,14 @@ func Open(filename string, inictl string) (port Port, err error) {
 	p.name = filename
 	p.encaps = p
 	fd := file.Fd()
-	e := setBlocking(fd)
-	if e != 0 {
-		err = p.errno("set blocking", e)
+	err = setBlocking(fd)
+	if err != nil {
+		err = p.error("set blocking", err)
 	}
 
 	t := &p.t
-	if e = sys.IoctlTermios(fd, sys.TCGETS, t); e != 0 {
-		err = p.errno("get term attr", e)
+	if err = sys.IoctlTermios(fd, sys.TCGETS, t); err != nil {
+		err = p.error("get term attr", err)
 		return
 	}
 	p.tOrig = p.t
@@ -68,12 +68,12 @@ func (p *dev) Close() error {
 	return p.hw.Close()
 }
 
-func (d *dev) Drain() error {
-	e := sys.IoctlTermios(d.Fd(), sys.TCSETSW, &d.tsav) // drain and set parameters
-	if e != 0 {
-		return d.errno("drain", e)
+func (d *dev) Drain() (err error) {
+	err = sys.IoctlTermios(d.Fd(), sys.TCSETSW, &d.tsav) // drain and set parameters
+	if err != nil {
+		err = d.error("drain", err)
 	}
-	return nil
+	return
 }
 
 func (d *dev) Purge(in, out bool) {
@@ -152,8 +152,8 @@ func (p *dev) SetDtr(on bool) error {
 }
 
 func (p *dev) commfn(name string, cmd int, f sys.Int) (err error) {
-	if e := sys.IoctlModem(p.Fd(), cmd, &f); e != 0 {
-		return p.errno(name, e)
+	if err = sys.IoctlModem(p.Fd(), cmd, &f); err != nil {
+		return p.error(name, err)
 	}
 	return
 }
@@ -181,9 +181,7 @@ func (d *dev) updateCtl() (err error) {
 		t.Cc[sys.VMIN] == tsav.Cc[sys.VMIN] {
 		return
 	}
-	if e := sys.IoctlTermios(d.Fd(), sys.TCSETSW, t); e != 0 { // drain and set parameters
-		err = syscall.Errno(e)
-	} else {
+	if err = sys.IoctlTermios(d.Fd(), sys.TCSETSW, t); err == nil { // drain and set parameters
 		d.tsav = d.t
 
 		// It seems changing parameters also resets DTR/RTS lines;
@@ -232,12 +230,12 @@ var speedMap = map[int]int{
 	4000000: sys.B4000000,
 }
 
-func setBlocking(fd int) (errno int) {
+func setBlocking(fd uintptr) (err error) {
 	var flags int
 
-	flags, errno = sys.Fcntl(fd, syscall.F_GETFL, 0)
-	if errno == 0 {
-		_, errno = sys.Fcntl(fd, syscall.F_SETFL, flags&^os.O_NONBLOCK)
+	flags, err = sys.Fcntl(fd, syscall.F_GETFL, 0)
+	if err == nil {
+		_, err = sys.Fcntl(fd, syscall.F_SETFL, flags&^os.O_NONBLOCK)
 	}
 	return
 }

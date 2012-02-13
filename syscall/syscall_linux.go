@@ -1,9 +1,9 @@
 package syscall
 
-//sys	Fcntl(fd int, cmd int, arg int) (val int, errno int)
+//sys	Fcntl(fd uintptr, cmd int, arg int) (val int, err error)
 
-//sys	IoctlTermios(fd int, action int, t *Termios) (errno int) = SYS_IOCTL
-//sys	IoctlModem(fd int, action int, flags *Int) (errno int) = SYS_IOCTL
+//sys	IoctlTermios(fd uintptr, action int, t *Termios) (err error) = SYS_IOCTL
+//sys	IoctlModem(fd uintptr, action int, flags *Int) (err error) = SYS_IOCTL
 
 func (t *Termios) SetInSpeed(s int) {
 	//	t.Iflag = t.Iflag&^CBAUD | uint32(s)&CBAUD

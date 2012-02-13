@@ -59,10 +59,10 @@ try:
 	}
 	d.initDone = true
 
-	if d.ev.r, e = win.CreateEvent(win.EvManualReset, !win.EvInitiallyOn); e != 0 {
+	if d.ev.r, e = win.CreateEvent(win.EvManualReset, !win.EvInitiallyOn); e != nil {
 		goto error
 	}
-	if d.ev.w, e = win.CreateEvent(win.EvManualReset, !win.EvInitiallyOn); e != 0 {
+	if d.ev.w, e = win.CreateEvent(win.EvManualReset, !win.EvInitiallyOn); e != nil {
 		goto error
 	}
 
@@ -72,10 +72,10 @@ try:
 		//		ReadTotalTimeoutConstant: ^uint32(0)-1,
 		ReadIntervalTimeout: 10,
 	}
-	if e = win.SetCommTimeouts(d.fd, &cto); e != 0 {
+	if e = win.SetCommTimeouts(d.fd, &cto); e != nil {
 		goto error
 	}
-	if e = win.SetupComm(d.fd, 4096, 4096); e != 0 {
+	if e = win.SetupComm(d.fd, 4096, 4096); e != nil {
 		goto error
 	}
 	p = d
@@ -89,12 +89,12 @@ func (p *dev) Read(buf []byte) (int, error) {
 		var ov syscall.Overlapped
 
 		ov.HEvent = p.ev.r
-		if e := syscall.ReadFile(p.fd, buf, &done, &ov); e != 0 {
+		if e := syscall.ReadFile(p.fd, buf, &done, &ov); e != nil {
 			if e != syscall.ERROR_IO_PENDING {
-				return 0, &os.PathError{"reading from", p.name, os.Errno(e)}
+				return 0, &os.PathError{"reading from", p.name, e}
 			}
-			if e = win.GetOverlappedResult(p.fd, &ov, &done, 1); e != 0 {
-				return 0, &os.PathError{"reading from", p.name, os.Errno(e)}
+			if e = win.GetOverlappedResult(p.fd, &ov, &done, 1); e != nil {
+				return 0, &os.PathError{"reading from", p.name, e}
 			}
 		}
 		if done > 0 {
@@ -111,12 +111,12 @@ func (p *dev) Write(buf []byte) (int, error) {
 		var ov syscall.Overlapped
 
 		ov.HEvent = p.ev.w
-		if e := syscall.WriteFile(p.fd, buf, &done, &ov); e != 0 {
+		if e := syscall.WriteFile(p.fd, buf, &done, &ov); e != nil {
 			if e != syscall.ERROR_IO_PENDING {
-				return 0, &os.PathError{"writing to", p.name, os.Errno(e)}
+				return 0, &os.PathError{"writing to", p.name, e}
 			}
-			if e = win.GetOverlappedResult(p.fd, &ov, &done, 1); e != 0 {
-				return 0, &os.PathError{"writing to", p.name, os.Errno(e)}
+			if e = win.GetOverlappedResult(p.fd, &ov, &done, 1); e != nil {
+				return 0, &os.PathError{"writing to", p.name, e}
 			}
 		}
 		if done > 0 {
@@ -130,15 +130,15 @@ func (d *dev) Close() (err error) {
 	d.Drain()
 	syscall.CloseHandle(d.ev.r)
 	syscall.CloseHandle(d.ev.w)
-	if e := syscall.CloseHandle(d.fd); e != 0 {
-		err = d.errno("close", e)
+	if e := syscall.CloseHandle(d.fd); e != nil {
+		err = d.error("close", e)
 	}
 	return nil
 }
 
 func (d *dev) Drain() (err error) {
-	if e := win.FlushFileBuffers(d.fd); e != 0 {
-		err = d.errno("drain", e)
+	if e := win.FlushFileBuffers(d.fd); e != nil {
+		err = d.error("drain", e)
 	}
 	return
 }
@@ -212,8 +212,8 @@ func (d *dev) SetDtr(on bool) (err error) {
 }
 
 func (d *dev) commfn(name string, f int) (err error) {
-	if e := win.EscapeCommFunction(d.fd, uint32(f)); e != 0 {
-		return &os.PathError{name, d.name, os.Errno(e)}
+	if e := win.EscapeCommFunction(d.fd, uint32(f)); e != nil {
+		return &os.PathError{name, d.name, e}
 	}
 	return
 }
@@ -262,8 +262,8 @@ func (d *dev) updateCtl() (err error) {
 		return
 	}
 	d.Drain()
-	if e := win.SetCommState(d.fd, &d.dcb); e != 0 {
-		err = d.errno("setdcb", e)
+	if e := win.SetCommState(d.fd, &d.dcb); e != nil {
+		err = d.error("setdcb", e)
 	} else {
 		d.dcbsav = d.dcb
 	}

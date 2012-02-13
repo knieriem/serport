@@ -11,7 +11,7 @@ const (
 	EvInitiallyOn = true
 )
 
-func CreateEvent(manualReset, initialState bool) (h syscall.Handle, errno int) {
+func CreateEvent(manualReset, initialState bool) (h syscall.Handle, err error) {
 	return CreateEventW(nil, b2i(manualReset), b2i(initialState), nil)
 }
 func b2i(v bool) int {
@@ -21,18 +21,18 @@ func b2i(v bool) int {
 	return 0
 }
 
-//sys CreateEventW(sa *syscall.SecurityAttributes, manualReset int, initialState int, name *uint16) (hEv syscall.Handle, errno int)
+//sys CreateEventW(sa *syscall.SecurityAttributes, manualReset int, initialState int, name *uint16) (hEv syscall.Handle, err error)
 
 
-//sys GetOverlappedResult(h syscall.Handle, ov *syscall.Overlapped, done *uint32, bWait int) (errno int)
+//sys GetOverlappedResult(h syscall.Handle, ov *syscall.Overlapped, done *uint32, bWait int) (err error)
 
 
-//sys	EscapeCommFunction(h syscall.Handle, fn uint32) (errno int)
-//sys SetupComm(h syscall.Handle, inQSize uint32, outQSize uint32) (errno int)
-//sys SetCommTimeouts(h syscall.Handle, cto *CommTimeouts) (errno int)
-//sys setCommState(h syscall.Handle, dcb *DCB) (errno  int) = SetCommState
-//sys getCommState(h syscall.Handle, dcb *DCB) (errno int) = GetCommState
-//sys FlushFileBuffers(h syscall.Handle) (errno int)
+//sys	EscapeCommFunction(h syscall.Handle, fn uint32) (err error)
+//sys SetupComm(h syscall.Handle, inQSize uint32, outQSize uint32) (err error)
+//sys SetCommTimeouts(h syscall.Handle, cto *CommTimeouts) (err error)
+//sys setCommState(h syscall.Handle, dcb *DCB) (err error) = SetCommState
+//sys getCommState(h syscall.Handle, dcb *DCB) (err error) = GetCommState
+//sys FlushFileBuffers(h syscall.Handle) (err error)
 
 // Flags for DCB.Flags (simulating a bitfield)
 const (
@@ -56,12 +56,12 @@ const (
 	DCBmRtsControl = 3
 )
 
-func SetCommState(h syscall.Handle, dcb *DCB) (errno int) {
+func SetCommState(h syscall.Handle, dcb *DCB) (err error) {
 	dcb.DCBlength = dcbSize
 	dcb.Flags |= DCBfBinary
 	return setCommState(h, dcb)
 }
-func GetCommState(h syscall.Handle, dcb *DCB) (errno int) {
+func GetCommState(h syscall.Handle, dcb *DCB) (err error) {
 	dcb.DCBlength = dcbSize
 	return getCommState(h, dcb)
 }
@@ -70,20 +70,20 @@ func GetCommState(h syscall.Handle, dcb *DCB) (errno int) {
 // registry stuff
 type HKEY uintptr
 
-//sys RegOpenKeyEx(h HKEY, name *uint16, options uint32, samDesired REGSAM, result *HKEY) (errno int) [failretval!=ERROR_SUCCESS] = advapi32.RegOpenKeyExW
-//sys RegEnumValue(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserved *uint32, typ *uint32, data *byte, sz *uint32) (errno int) [failretval!=ERROR_SUCCESS] = advapi32.RegEnumValueW
-//sys RegQueryValueEx(h HKEY, vName *uint16, reserved *uint32, typ *uint32, data *byte, sz *uint32) (errno int) [failretval!=ERROR_SUCCESS] = advapi32.RegQueryValueExW
+//sys RegOpenKeyEx(h HKEY, name *uint16, options uint32, samDesired REGSAM, result *HKEY) (err error) [failretval!=ERROR_SUCCESS] = advapi32.RegOpenKeyExW
+//sys RegEnumValue(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) [failretval!=ERROR_SUCCESS] = advapi32.RegEnumValueW
+//sys RegQueryValueEx(h HKEY, vName *uint16, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) [failretval!=ERROR_SUCCESS] = advapi32.RegQueryValueExW
 //sys RegCloseKey(h HKEY) [failretval!=ERROR_SUCCESS] = advapi32.RegCloseKey
 
 
-//sys getUserName(buf *uint16, sz *uint32) (errno int) [failretval==0] = advapi32.GetUserNameW
+//sys getUserName(buf *uint16, sz *uint32) (err error) [failretval==0] = advapi32.GetUserNameW
 
 func GetUserName() string {
 	var (
 		buf = make([]uint16, 128)
 		sz  = uint32(len(buf))
 	)
-	if e := getUserName(&buf[0], &sz); e != 0 {
+	if e := getUserName(&buf[0], &sz); e != nil {
 		return "none"
 	}
 	return syscall.UTF16ToString(buf[:sz])

@@ -7,7 +7,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -108,8 +107,8 @@ func (d *dev) Record() {
 func (d *dev) Commit() {
 }
 
-func (p *dev) errno(action string, e int) error {
-	return &os.PathError{action, p.name, syscall.Errno(e)}
+func (p *dev) error(action string, err error) error {
+	return &os.PathError{action, p.name, err}
 }
 
 func (p *dev) errorf(action string, format string, args ...interface{}) error {
