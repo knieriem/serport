@@ -6,8 +6,8 @@
 package signal
 
 import (
-	"os"
 	"exp/signal"
+	"os"
 )
 
 var Incoming <-chan os.Signal

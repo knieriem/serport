@@ -2,8 +2,8 @@
 package user
 
 import (
-	"github.com/knieriem/g/syscall"
 	"code.google.com/p/go9p/p"
+	"github.com/knieriem/g/syscall"
 	"os"
 )
 

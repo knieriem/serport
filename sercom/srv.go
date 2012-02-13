@@ -4,10 +4,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/knieriem/g/go9p/user"
-	"github.com/knieriem/g/ioutil"
 	"code.google.com/p/go9p/p"
 	"code.google.com/p/go9p/p/srv"
+	"github.com/knieriem/g/go9p/user"
+	"github.com/knieriem/g/ioutil"
 )
 
 var (
