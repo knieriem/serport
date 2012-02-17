@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/knieriem/g/sercom"
-	"github.com/knieriem/g/signal"
 	"io"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
 )
 
@@ -56,13 +56,16 @@ func main() {
 		go copyproc(os.Stdout, port)
 	}
 
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig)
+
 	select {
 	case err = <-cherr:
 		if err != io.EOF {
 			log.Println(err)
 		}
-	case sig := <-signal.Incoming:
-		log.Println(sig)
+	case s := <-sig:
+		log.Println(s)
 	}
 	port.Close()
 	os.Exit(0)
