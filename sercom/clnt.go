@@ -120,8 +120,8 @@ func (d *fdev) Record() {
 }
 
 func (d *fdev) Commit() {
-	d.cmd("}")
 	d.recording = false
+	d.cmd("}")
 }
 
 func (d *fdev) Ctl(cmds ...string) (err error) {
