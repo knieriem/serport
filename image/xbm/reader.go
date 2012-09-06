@@ -6,7 +6,6 @@
 // the structure of image/gif/reader.go.
 
 // Package xbm implements an X11 Bitmap decoder.
-
 package xbm
 
 import (

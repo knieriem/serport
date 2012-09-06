@@ -5,8 +5,7 @@
 // Derived from image/gif/reader.go, changes
 // © 2011 M. Teichgräber
 
-// Package pnm implements a PNM image decoder.
-
+// Package pnm implements a PBM image decoder.
 package pnm
 
 import (

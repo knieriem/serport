@@ -1,5 +1,4 @@
-// Package image implements additions to golang's image package
-
+// Package image implements a bitmap image type, and a binary color type
 package image
 
 import (
