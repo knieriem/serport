@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// An implementation of Plan 9's tokenize (see 
+// An implementation of Plan 9's tokenize (see
 // http://plan9.bell-labs.com/magic/man2html/2/getfields)
 //
 // Tokenize is similar to strings.Fields – an input string is split
