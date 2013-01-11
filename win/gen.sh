@@ -25,19 +25,18 @@ GCC=/usr/bin/$gccarch-mingw32msvc-gcc
 
 SFX=_${OS}_$GOARCH.go
 
-perl $mksyscall $arch ${pkg}_$OS.go |
-	sed 's/^package.*syscall$/package '$PKG'/' |
-	sed '/^import/a \
-		import "syscall"' |
-	sed '/import *"DISABLEDunsafe"/d' |
-	sed 's/Syscall/syscall.Syscall/' |
-	sed 's/NewLazyDLL/syscall.&/' |
-	sed 's/EINVAL/syscall.EINVAL/' |
+src=${pkg}_$OS.go
+mv $src _$src
+sed '/^package/s,syscall,none,' <_$src >$src
+perl $mksyscall $arch $src |
+	sed 's/^package.*none$/package '$pkg'/' |
 	gofmt > z$pkg$SFX
+rm $src
+mv _$src $src
 
 if test -f $OS/types.go; then
 	# note: cgo execution depends on $GOARCH value
-	GCC=$GCC cgo -godefs $OS/types.go  |
+	GCC=$GCC go tool cgo -godefs $OS/types.go  |
 		sed '/Pad_cgo_0/c\
 		Flags	uint32' |
 		awk -f $ZDIR/fixtype.awk |
@@ -67,7 +66,7 @@ EOF
 	echo ')'
 ) > ,,const.go
 
-GCC=$GCC cgo -godefs ,,const.go |
+GCC=$GCC go tool cgo -godefs ,,const.go |
 	awk -f $ZDIR/fixtype.awk |
 	gofmt > zconst$SFX
 rm -f ,,const.go

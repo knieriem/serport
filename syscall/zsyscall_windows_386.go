@@ -40,7 +40,7 @@ func CreateEventW(sa *syscall.SecurityAttributes, manualReset int, initialState 
 
 func GetOverlappedResult(h syscall.Handle, ov *syscall.Overlapped, done *uint32, bWait int) (err error) {
 	r1, _, e1 := syscall.Syscall6(procGetOverlappedResult.Addr(), 4, uintptr(h), uintptr(unsafe.Pointer(ov)), uintptr(unsafe.Pointer(done)), uintptr(bWait), 0, 0)
-	if int(r1) == 0 {
+	if r1 == 0 {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
@@ -52,7 +52,7 @@ func GetOverlappedResult(h syscall.Handle, ov *syscall.Overlapped, done *uint32,
 
 func EscapeCommFunction(h syscall.Handle, fn uint32) (err error) {
 	r1, _, e1 := syscall.Syscall(procEscapeCommFunction.Addr(), 2, uintptr(h), uintptr(fn), 0)
-	if int(r1) == 0 {
+	if r1 == 0 {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
@@ -64,7 +64,7 @@ func EscapeCommFunction(h syscall.Handle, fn uint32) (err error) {
 
 func SetupComm(h syscall.Handle, inQSize uint32, outQSize uint32) (err error) {
 	r1, _, e1 := syscall.Syscall(procSetupComm.Addr(), 3, uintptr(h), uintptr(inQSize), uintptr(outQSize))
-	if int(r1) == 0 {
+	if r1 == 0 {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
@@ -76,7 +76,7 @@ func SetupComm(h syscall.Handle, inQSize uint32, outQSize uint32) (err error) {
 
 func SetCommTimeouts(h syscall.Handle, cto *CommTimeouts) (err error) {
 	r1, _, e1 := syscall.Syscall(procSetCommTimeouts.Addr(), 2, uintptr(h), uintptr(unsafe.Pointer(cto)), 0)
-	if int(r1) == 0 {
+	if r1 == 0 {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
@@ -88,7 +88,7 @@ func SetCommTimeouts(h syscall.Handle, cto *CommTimeouts) (err error) {
 
 func setCommState(h syscall.Handle, dcb *DCB) (err error) {
 	r1, _, e1 := syscall.Syscall(procSetCommState.Addr(), 2, uintptr(h), uintptr(unsafe.Pointer(dcb)), 0)
-	if int(r1) == 0 {
+	if r1 == 0 {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
@@ -100,7 +100,7 @@ func setCommState(h syscall.Handle, dcb *DCB) (err error) {
 
 func getCommState(h syscall.Handle, dcb *DCB) (err error) {
 	r1, _, e1 := syscall.Syscall(procGetCommState.Addr(), 2, uintptr(h), uintptr(unsafe.Pointer(dcb)), 0)
-	if int(r1) == 0 {
+	if r1 == 0 {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
@@ -112,7 +112,7 @@ func getCommState(h syscall.Handle, dcb *DCB) (err error) {
 
 func FlushFileBuffers(h syscall.Handle) (err error) {
 	r1, _, e1 := syscall.Syscall(procFlushFileBuffers.Addr(), 1, uintptr(h), 0, 0)
-	if int(r1) == 0 {
+	if r1 == 0 {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
@@ -124,7 +124,7 @@ func FlushFileBuffers(h syscall.Handle) (err error) {
 
 func RegOpenKeyEx(h HKEY, name *uint16, options uint32, samDesired REGSAM, result *HKEY) (err error) {
 	r1, _, e1 := syscall.Syscall6(procRegOpenKeyExW.Addr(), 5, uintptr(h), uintptr(unsafe.Pointer(name)), uintptr(options), uintptr(samDesired), uintptr(unsafe.Pointer(result)), 0)
-	if int(r1) != ERROR_SUCCESS {
+	if r1 != ERROR_SUCCESS {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
@@ -136,7 +136,7 @@ func RegOpenKeyEx(h HKEY, name *uint16, options uint32, samDesired REGSAM, resul
 
 func RegEnumValue(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) {
 	r1, _, e1 := syscall.Syscall9(procRegEnumValueW.Addr(), 8, uintptr(h), uintptr(index), uintptr(unsafe.Pointer(vName)), uintptr(unsafe.Pointer(vNameLen)), uintptr(unsafe.Pointer(reserved)), uintptr(unsafe.Pointer(typ)), uintptr(unsafe.Pointer(data)), uintptr(unsafe.Pointer(sz)), 0)
-	if int(r1) != ERROR_SUCCESS {
+	if r1 != ERROR_SUCCESS {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
@@ -148,7 +148,7 @@ func RegEnumValue(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserve
 
 func RegQueryValueEx(h HKEY, vName *uint16, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) {
 	r1, _, e1 := syscall.Syscall6(procRegQueryValueExW.Addr(), 6, uintptr(h), uintptr(unsafe.Pointer(vName)), uintptr(unsafe.Pointer(reserved)), uintptr(unsafe.Pointer(typ)), uintptr(unsafe.Pointer(data)), uintptr(unsafe.Pointer(sz)))
-	if int(r1) != ERROR_SUCCESS {
+	if r1 != ERROR_SUCCESS {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
@@ -165,7 +165,7 @@ func RegCloseKey(h HKEY) {
 
 func getUserName(buf *uint16, sz *uint32) (err error) {
 	r1, _, e1 := syscall.Syscall(procGetUserNameW.Addr(), 2, uintptr(unsafe.Pointer(buf)), uintptr(unsafe.Pointer(sz)), 0)
-	if int(r1) == 0 {
+	if r1 == 0 {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
