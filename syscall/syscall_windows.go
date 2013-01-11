@@ -4,7 +4,6 @@ import (
 	"syscall"
 )
 
-
 const (
 	// for CreateEvent
 	EvManualReset = true
@@ -23,9 +22,7 @@ func b2i(v bool) int {
 
 //sys CreateEventW(sa *syscall.SecurityAttributes, manualReset int, initialState int, name *uint16) (hEv syscall.Handle, err error)
 
-
 //sys GetOverlappedResult(h syscall.Handle, ov *syscall.Overlapped, done *uint32, bWait int) (err error)
-
 
 //sys	EscapeCommFunction(h syscall.Handle, fn uint32) (err error)
 //sys SetupComm(h syscall.Handle, inQSize uint32, outQSize uint32) (err error)
@@ -75,17 +72,3 @@ type HKEY uintptr
 //sys RegEnumValue(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) [failretval!=ERROR_SUCCESS] = advapi32.RegEnumValueW
 //sys RegQueryValueEx(h HKEY, vName *uint16, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) [failretval!=ERROR_SUCCESS] = advapi32.RegQueryValueExW
 //sys RegCloseKey(h HKEY) [failretval!=ERROR_SUCCESS] = advapi32.RegCloseKey
-
-
-//sys getUserName(buf *uint16, sz *uint32) (err error) [failretval==0] = advapi32.GetUserNameW
-
-func GetUserName() string {
-	var (
-		buf = make([]uint16, 128)
-		sz  = uint32(len(buf))
-	)
-	if e := getUserName(&buf[0], &sz); e != nil {
-		return "none"
-	}
-	return syscall.UTF16ToString(buf[:sz])
-}

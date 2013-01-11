@@ -3,8 +3,8 @@ package user
 
 import (
 	"code.google.com/p/go9p/p"
-	"github.com/knieriem/g/syscall"
 	"os"
+	osuser "os/user"
 )
 
 type user struct {
@@ -13,7 +13,12 @@ type user struct {
 }
 
 func Current() p.User {
-	return &user{syscall.GetUserName(), os.Getuid()}
+	uid := os.Getuid()
+	u, err := osuser.Current()
+	if err != nil {
+		return &user{"none", uid}
+	}
+	return &user{u.Username, uid}
 }
 
 func (u *user) Name() string {

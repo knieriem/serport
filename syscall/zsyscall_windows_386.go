@@ -23,7 +23,6 @@ var (
 	procRegEnumValueW       = modadvapi32.NewProc("RegEnumValueW")
 	procRegQueryValueExW    = modadvapi32.NewProc("RegQueryValueExW")
 	procRegCloseKey         = modadvapi32.NewProc("RegCloseKey")
-	procGetUserNameW        = modadvapi32.NewProc("GetUserNameW")
 )
 
 func CreateEventW(sa *syscall.SecurityAttributes, manualReset int, initialState int, name *uint16) (hEv syscall.Handle, err error) {
@@ -174,17 +173,5 @@ func RegQueryValueEx(h HKEY, vName *uint16, reserved *uint32, typ *uint32, data 
 
 func RegCloseKey(h HKEY) {
 	syscall.Syscall(procRegCloseKey.Addr(), 1, uintptr(h), 0, 0)
-	return
-}
-
-func getUserName(buf *uint16, sz *uint32) (err error) {
-	r1, _, e1 := syscall.Syscall(procGetUserNameW.Addr(), 2, uintptr(unsafe.Pointer(buf)), uintptr(unsafe.Pointer(sz)), 0)
-	if r1 == 0 {
-		if e1 != 0 {
-			err = error(e1)
-		} else {
-			err = syscall.EINVAL
-		}
-	}
 	return
 }
