@@ -1,14 +1,9 @@
 // Created by cgo -godefs - DO NOT EDIT
 // cgo -godefs ,,const.go
 
-//line ,,const.go:1
 package syscall
 
-//line ,,const.go:10
-
-//line ,,const.go:9
 const (
-	//line ,,const.go:11
 	BRKINT = 0x2
 	IGNPAR = 0x4
 	ICRNL  = 0x100
@@ -23,9 +18,7 @@ const (
 	VTIME  = 0x5
 	VMIN   = 0x6
 	CLOCAL = 0x800
-	//line ,,const.go:28
 
-	//line ,,const.go:27
 	CBAUD    = 0x100f
 	B0       = 0x0
 	B50      = 0x1
@@ -58,44 +51,30 @@ const (
 	B3000000 = 0x100d
 	B3500000 = 0x100e
 	B4000000 = 0x100f
-	//line ,,const.go:62
 
-	//line ,,const.go:61
 	CSIZE = 0x30
 	CS5   = 0x0
 	CS6   = 0x10
 	CS7   = 0x20
 	CS8   = 0x30
-	//line ,,const.go:69
 
-	//line ,,const.go:68
 	PARENB = 0x100
 	PARODD = 0x200
-	//line ,,const.go:72
 
-	//line ,,const.go:71
 	CRTSCTS = 0x80000000
-	//line ,,const.go:75
 
-	//line ,,const.go:74
 	CSTOPB = 0x40
-	//line ,,const.go:78
 
-	//line ,,const.go:77
 	TCGETS  = 0x5401
 	TCSETS  = 0x5402
 	TCSETSW = 0x5403
 	TCSETSF = 0x5404
-	//line ,,const.go:83
 
-	//line ,,const.go:82
 	TIOCMBIC = 0x5417
 	TIOCMBIS = 0x5416
 	TIOCMSET = 0x5418
 	TIOCMGET = 0x5415
-	//line ,,const.go:89
 
-	//line ,,const.go:88
 	TIOCM_LE  = 0x1
 	TIOCM_DTR = 0x2
 	TIOCM_RTS = 0x4
