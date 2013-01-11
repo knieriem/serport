@@ -66,6 +66,7 @@ func GetCommState(h syscall.Handle, dcb *DCB) (err error) {
 	return getCommState(h, dcb)
 }
 
+//sys GetConsoleMode(h syscall.Handle, mode *uint32) (ok bool, err error)
 
 // registry stuff
 type HKEY uintptr

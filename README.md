@@ -28,7 +28,7 @@
 
 *	__ioutil__
 
-	`ChannelizeReader`.
+	`ChannelizeReader` and `IsTerminal`.
 
 *	__registry__
 

@@ -5,6 +5,7 @@ OSARCH=\
 	linux_386\
 	linux_amd64\
 	windows_386\
+	windows_amd64\
 
 ITEMS=\
 	const\

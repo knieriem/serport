@@ -18,6 +18,7 @@ var (
 	procSetCommState        = modkernel32.NewProc("SetCommState")
 	procGetCommState        = modkernel32.NewProc("GetCommState")
 	procFlushFileBuffers    = modkernel32.NewProc("FlushFileBuffers")
+	procGetConsoleMode      = modkernel32.NewProc("GetConsoleMode")
 	procRegOpenKeyExW       = modadvapi32.NewProc("RegOpenKeyExW")
 	procRegEnumValueW       = modadvapi32.NewProc("RegEnumValueW")
 	procRegQueryValueExW    = modadvapi32.NewProc("RegQueryValueExW")
@@ -113,6 +114,19 @@ func getCommState(h syscall.Handle, dcb *DCB) (err error) {
 func FlushFileBuffers(h syscall.Handle) (err error) {
 	r1, _, e1 := syscall.Syscall(procFlushFileBuffers.Addr(), 1, uintptr(h), 0, 0)
 	if r1 == 0 {
+		if e1 != 0 {
+			err = error(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func GetConsoleMode(h syscall.Handle, mode *uint32) (ok bool, err error) {
+	r0, _, e1 := syscall.Syscall(procGetConsoleMode.Addr(), 2, uintptr(h), uintptr(unsafe.Pointer(mode)), 0)
+	ok = bool(r0 != 0)
+	if !ok {
 		if e1 != 0 {
 			err = error(e1)
 		} else {
