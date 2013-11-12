@@ -6,13 +6,7 @@ import (
 
 	"code.google.com/p/go9p/p"
 	"code.google.com/p/go9p/p/srv"
-	"github.com/knieriem/g/go9p/user"
 	"github.com/knieriem/g/ioutil"
-)
-
-var (
-	Debug    bool
-	Debugall bool
 )
 
 type ctl struct {
@@ -107,20 +101,12 @@ func (d *data) Clunk(f *srv.FFid) error {
 	return nil
 }
 
-// Serve a previously opened serial device via 9P.
-// `addr' shoud be of form "host:port", where host
-// may be missing.
-func Serve9P(addr string, dev Port) (err error) {
-	user := user.Current()
-	root := new(srv.File)
-	err = root.Add(nil, "/", user, nil, p.DMDIR|0555, nil)
-	if err != nil {
-		return
-	}
-
+// Link ctl and data files (that wrap a previously opened
+// serial port) into an existing 9P file tree `dir'.
+func RegisterFiles9P(dir *srv.File, dev Port, user p.User) (err error) {
 	c := new(ctl)
 	c.dev = dev
-	err = c.Add(root, "ctl", user, nil, 0666, c)
+	err = c.Add(dir, "ctl", user, nil, 0666, c)
 	if err != nil {
 		return
 	}
@@ -130,22 +116,7 @@ func Serve9P(addr string, dev Port) (err error) {
 	d.rch = ioutil.ChannelizeReader(dev, nil)
 	d.unblockch = make(chan bool)
 	c.dataUnblockch = d.unblockch
-	err = d.Add(root, "data", user, nil, 0666, d)
-	if err != nil {
-		return
-	}
+	err = d.Add(dir, "data", user, nil, 0666, d)
 
-	s := srv.NewFileSrv(root)
-	s.Dotu = true
-
-	switch {
-	case Debugall:
-		s.Debuglevel = 2
-	case Debug:
-		s.Debuglevel = 1
-	}
-
-	s.Start(s)
-	err = s.StartNetListener("tcp", addr)
 	return
 }
