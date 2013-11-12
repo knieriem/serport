@@ -1,9 +1,3 @@
-ifndef TARG
-	TARG=github.com/knieriem/g/win/$(PKG)
-endif
-include $(GOROOT)/src/Make.pkg
-
-
 ifndef WIN_ZDIR
 	WIN_ZDIR :=$(shell d=.; while ! test -f Make.zpkg; do cd ..; d=$$d/..; done; echo $$d)
 endif
