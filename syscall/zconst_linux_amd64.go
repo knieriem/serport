@@ -18,6 +18,7 @@ const (
 	VTIME  = 0x5
 	VMIN   = 0x6
 	CLOCAL = 0x800
+	CREAD  = 0x80
 
 	CBAUD    = 0x100f
 	B0       = 0x0
