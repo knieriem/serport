@@ -45,7 +45,7 @@ func Open(filename string, inictl string) (port Port, err error) {
 	p.tOrig = p.t
 	p.tsav = p.t
 
-	t.Cflag |= sys.CLOCAL
+	t.Cflag |= sys.CLOCAL | sys.CREAD
 	t.Lflag &^= sys.ICANON | sys.ECHO | sys.ISIG | sys.IEXTEN
 	t.Iflag &^= sys.BRKINT | sys.ICRNL | sys.INPCK | sys.ISTRIP | sys.IXON
 	t.Iflag |= sys.IGNPAR
