@@ -7,6 +7,7 @@ import (
 	"code.google.com/p/go9p/p/clnt"
 	"github.com/knieriem/g/go9p/user"
 	"io"
+	"net"
 	"os"
 	"strconv"
 )
@@ -16,15 +17,15 @@ type dev9 struct {
 	fdev
 }
 
-// Connect to a 9P server that is listening at `addr',
+// Mount a 9P server using a previously established connection,
 // and wrap ctl and data files of a remote serial device
 // into a Port.
 // Basename is the a file name prefix or directory,
 // where the device is expected to be found. It can
 // be "", if ctl and data files live in the 9P servers
 // root directory
-func Connect9P(addr, basename string) (port Port, err error) {
-	c, err := clnt.Mount("tcp", addr, "", user.Current())
+func MountConn(conn net.Conn, basename string) (port Port, c *clnt.Clnt, err error) {
+	c, err = clnt.MountConn(conn, "", user.Current())
 	if err != nil {
 		return
 	}
