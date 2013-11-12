@@ -3,32 +3,51 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/knieriem/g/sercom"
 	"io"
 	"log"
+	"net"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
+	"time"
+
+	"code.google.com/p/go9p/p"
+	"code.google.com/p/go9p/p/srv"
+	"github.com/knieriem/g/go9p"
+	"github.com/knieriem/g/go9p/user"
+	"github.com/knieriem/g/netutil"
+	"github.com/knieriem/g/sercom"
+	"github.com/knieriem/g/text"
 )
 
 var (
-	dev      = flag.String("d", "", "COM device, e.g. COM1 or /dev/ttyUSB0")
-	addr     = flag.String("serve9P", "", "serve device via 9P at host:port")
+	serveAddr = flag.String("serve", "", "serve device via 9P at a tcp addr, or (with `-') at stdin/out")
+
 	list     = flag.Bool("list", false, "list serial devices")
 	debug    = flag.Bool("9d", false, "print 9P debug messages")
 	debugall = flag.Bool("9D", false, "print 9P packets as well as debug messages")
 )
 
+type connOps struct {
+	*srv.Fsrv
+	*go9p.ConnOps
+}
+
+type traceLine struct {
+	Δt     time.Duration
+	prefix string
+	buf    []byte
+}
+
+var traceC chan traceLine
+
 func main() {
-	var err error
-	var port sercom.Port
+	var dev string
 
 	flag.Parse()
 	log.SetFlags(log.Lshortfile)
 	cherr = make(chan error)
-
-	sercom.Debug = *debug
-	sercom.Debugall = *debugall
 
 	if *list {
 		for _, s := range sercom.DeviceList() {
@@ -37,23 +56,78 @@ func main() {
 		return
 	}
 
-	if strings.Index(*dev, ":") != -1 {
-		port, err = sercom.Connect9P(*dev, "")
+	args := flag.Args()
+
+	if len(args) == 0 {
+		l := sercom.DeviceList()
+		if len(l) == 0 {
+			return
+		}
+		dev = l[0]
 	} else {
-		if fi, e := os.Stat(*dev); e == nil && fi.IsDir() {
-			port, err = sercom.OpenFsDev(*dev)
-		} else {
-			port, err = sercom.Open(*dev, strings.Join(flag.Args(), " "))
+		dev = args[0]
+		args = args[1:]
+	}
+
+	var args2 []string
+	for i, a := range args {
+		if a == "." {
+			args2 = args[i+1:]
+			args = args[:i]
+			break
 		}
 	}
+
+	port, err := openport(dev, args)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if *addr != "" {
-		go sercom.Serve9P(*addr, port)
+
+	if *serveAddr != "" {
+		s, err := newServer(port)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if *serveAddr != "-" {
+			s.Start(s)
+			go func() {
+				cherr <- s.StartNetListener("tcp", *serveAddr)
+			}()
+		} else {
+			o := go9p.AddConnOps(nil)
+			closedC := o.ClosedC()
+			s.Start(&connOps{s, o})
+			s.NewConn(netutil.NewStreamConn(os.Stdin, os.Stdout))
+			go func() {
+				<-closedC
+				cherr <- io.EOF
+			}()
+		}
+	} else if len(args2) > 0 {
+		port2, err := openport(args2[0], args2[1:])
+		if err != nil {
+			log.Fatal(err)
+		}
+		traceC = make(chan traceLine, 32)
+		go func() {
+			t0 := time.Now()
+			for m := range traceC {
+				ms := float64(m.Δt.Nanoseconds()) / 1000000
+				t := time.Now()
+				ms2 := float64(t.Sub(t0).Nanoseconds()) / 1000000
+				if ms > 999 {
+					fmt.Printf("-\t%06.2fms\t%s [%x]\n", ms2, m.prefix, m.buf)
+				} else {
+					fmt.Printf("%06.2fms\t%06.2fms\t%s [%x]\n", ms, ms2, m.prefix, m.buf)
+				}
+				t0 = t
+			}
+		}()
+		go copyproc(port, port2, "<-")
+		go copyproc(port2, port, "->")
 	} else {
-		go copyproc(port, os.Stdin)
-		go copyproc(os.Stdout, port)
+		go copyproc(port, os.Stdin, "")
+		go copyproc(os.Stdout, port, "")
 	}
 
 	sig := make(chan os.Signal, 1)
@@ -71,24 +145,124 @@ func main() {
 	os.Exit(0)
 }
 
+func openport(dev string, args []string) (port sercom.Port, err error) {
+	var c net.Conn
+
+	prot := "local"
+	dest := ""
+	if i := strings.Index(dev, ":"); i != -1 {
+		prot = dev[:i]
+		dest = dev[i+1:]
+	}
+	if prot == "9P" {
+		if strings.HasPrefix(dest, "!") {
+			if c, err = connectToCommand(dest[1:]); err == nil {
+				port, err = mountConn(c)
+			}
+		} else if c, err = net.Dial("tcp", dest); err == nil {
+			port, err = mountConn(c)
+		}
+	} else if fi, e := os.Stat(dev); e == nil && fi.IsDir() {
+		port, err = sercom.OpenFsDev(dev)
+	} else {
+		port, err = sercom.Open(dev, "")
+	}
+
+	if err == nil {
+		err = port.Ctl(strings.Join(args, " "))
+	}
+	return
+}
+
+func connectToCommand(command string) (c net.Conn, err error) {
+	cmdLine := text.Tokenize(command)
+
+	cmd := exec.Command(cmdLine[0], cmdLine[1:]...)
+	r, err := cmd.StdoutPipe()
+	if err != nil {
+		return
+	}
+	w, err := cmd.StdinPipe()
+	if err != nil {
+		return
+	}
+	err = cmd.Start()
+	if err != nil {
+		return
+	}
+	go func() {
+		err := cmd.Wait()
+		if err == nil {
+			err = io.EOF
+		}
+		cherr <- err
+	}()
+	c = netutil.NewStreamConn(r, w)
+	return
+}
+
 var cherr chan error
 
-func copyproc(to io.Writer, from io.Reader) {
+func copyproc(to io.Writer, from io.Reader, tracePrefix string) {
 	var (
 		buf = make([]byte, 1024)
 		err error
 		n   int
 	)
+	t0 := time.Now()
 
 	for {
 		if n, err = from.Read(buf); err != nil {
 			break
 		}
 		if n > 0 {
+			if tracePrefix != "" {
+				t := time.Now()
+				traceC <- traceLine{t.Sub(t0), tracePrefix, buf[:n]}
+				t0 = t
+			}
 			if _, err = to.Write(buf[:n]); err != nil {
 				break
 			}
 		}
 	}
 	cherr <- err
+}
+
+func mountConn(c net.Conn) (port sercom.Port, err error) {
+	port, clnt, err := sercom.MountConn(c, "")
+	if err == nil {
+		switch {
+		case *debugall:
+			clnt.Debuglevel = 2
+		case *debug:
+			clnt.Debuglevel = 1
+
+		}
+	}
+	return
+}
+
+func newServer(dev sercom.Port) (s *srv.Fsrv, err error) {
+	user := user.Current()
+	root := new(srv.File)
+	err = root.Add(nil, "/", user, nil, p.DMDIR|0555, nil)
+	if err != nil {
+		return
+	}
+
+	err = sercom.RegisterFiles9P(root, dev, user)
+	if err != nil {
+		return
+	}
+
+	s = srv.NewFileSrv(root)
+
+	switch {
+	case *debugall:
+		s.Debuglevel = 2
+	case *debug:
+		s.Debuglevel = 1
+	}
+	return
 }
