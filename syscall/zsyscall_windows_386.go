@@ -11,6 +11,7 @@ var (
 	modadvapi32 = syscall.NewLazyDLL("advapi32.dll")
 
 	procCreateEventW        = modkernel32.NewProc("CreateEventW")
+	procSetEvent            = modkernel32.NewProc("SetEvent")
 	procGetOverlappedResult = modkernel32.NewProc("GetOverlappedResult")
 	procEscapeCommFunction  = modkernel32.NewProc("EscapeCommFunction")
 	procSetupComm           = modkernel32.NewProc("SetupComm")
@@ -29,6 +30,18 @@ func CreateEventW(sa *syscall.SecurityAttributes, manualReset int, initialState 
 	r0, _, e1 := syscall.Syscall6(procCreateEventW.Addr(), 4, uintptr(unsafe.Pointer(sa)), uintptr(manualReset), uintptr(initialState), uintptr(unsafe.Pointer(name)), 0, 0)
 	hEv = syscall.Handle(r0)
 	if hEv == 0 {
+		if e1 != 0 {
+			err = error(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func SetEvent(h syscall.Handle) (err error) {
+	r1, _, e1 := syscall.Syscall(procSetEvent.Addr(), 1, uintptr(h), 0, 0)
+	if r1 == 0 {
 		if e1 != 0 {
 			err = error(e1)
 		} else {

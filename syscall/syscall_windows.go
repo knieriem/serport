@@ -22,6 +22,8 @@ func b2i(v bool) int {
 
 //sys CreateEventW(sa *syscall.SecurityAttributes, manualReset int, initialState int, name *uint16) (hEv syscall.Handle, err error)
 
+//sys SetEvent(h syscall.Handle) (err error)
+
 //sys GetOverlappedResult(h syscall.Handle, ov *syscall.Overlapped, done *uint32, bWait int) (err error)
 
 //sys	EscapeCommFunction(h syscall.Handle, fn uint32) (err error)
