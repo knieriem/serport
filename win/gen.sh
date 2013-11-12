@@ -3,6 +3,7 @@
 
 pkg=$PKG
 OS=$GOOS
+GOROOT=`go env GOROOT`
 
 mksyscall=$GOROOT/src/pkg/syscall/mksyscall_windows.pl
 

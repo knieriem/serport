@@ -2,7 +2,7 @@ pkg=syscall
 OS=$GOOS
 ARCH=$GOARCH
 
-mksyscall=$GOROOT/src/pkg/syscall/mksyscall.pl
+mksyscall=`go env GOROOT`/src/pkg/syscall/mksyscall.pl
 
 perl $mksyscall ${pkg}_$OS.go |
 	sed 's/^package.*syscall$$/package $*/' |
