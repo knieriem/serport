@@ -1,6 +1,8 @@
 # depends on environment variables:
 #	PKG, ZDIR, GOARCH
 
+set -e
+
 pkg=$PKG
 OS=$GOOS
 GOROOT=`go env GOROOT`
@@ -9,11 +11,11 @@ mksyscall=$GOROOT/src/pkg/syscall/mksyscall_windows.pl
 
 case $GOARCH in
 386)
-	gccarch=i586
+	gccarch=i686
 	arch=-l32
 	;;
 amd64)
-	gccarch=amd64
+	gccarch=x86_64
 	arch=
 	;;
 *)
@@ -22,7 +24,7 @@ amd64)
 	;;
 esac
 
-GCC=/usr/bin/$gccarch-mingw32msvc-gcc
+GCC=/usr/bin/$gccarch-w64-mingw32-gcc
 
 SFX=_${OS}_$GOARCH.go
 
