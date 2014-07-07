@@ -7,16 +7,12 @@ pkg=$PKG
 OS=$GOOS
 GOROOT=`go env GOROOT`
 
-mksyscall=$GOROOT/src/pkg/syscall/mksyscall_windows.pl
-
 case $GOARCH in
 386)
 	gccarch=i686
-	arch=-l32
 	;;
 amd64)
 	gccarch=x86_64
-	arch=
 	;;
 *)
 	echo GOARCH $GOARCH not supported
@@ -31,10 +27,14 @@ SFX=_${OS}_$GOARCH.go
 src=${pkg}_$OS.go
 mv $src _$src
 sed '/^package/s,syscall,none,' <_$src >$src
-perl $mksyscall $arch $src |
-	sed 's/^package.*none$/package '$pkg'/' |
+GOARCH= GOOS= go build $mksyscall $GOROOT/src/pkg/syscall/mksyscall_windows.go
+./mksyscall_windows $src |
+	sed '/import.*unsafe/a\
+import "syscall"' |
+	sed 's,EINVAL,syscall.EINVAL,g;s,Syscall,syscall.Syscall,;s,NewLazyDLL,syscall.NewLazyDLL,;s/^package.*syscall/package '$pkg'/' |
 	gofmt > z$pkg$SFX
-rm $src
+rm -f mksyscall_windows
+rm -f $src
 mv _$src $src
 
 if test -f $OS/types.go; then
