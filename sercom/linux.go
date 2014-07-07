@@ -1,10 +1,11 @@
 package sercom
 
 import (
-	sys "github.com/knieriem/g/syscall"
 	"os"
 	"path/filepath"
 	"syscall"
+
+	sys "github.com/knieriem/g/syscall"
 )
 
 const (
@@ -51,9 +52,9 @@ func Open(filename string, inictl string) (port Port, err error) {
 	t.Iflag |= sys.IGNPAR
 	t.Oflag &^= sys.OPOST
 
-	// timeout 1/10s after the last byte (at least one) has been read
+	// block until at least one byte has been read
 	t.Cc[sys.VMIN] = 1
-	t.Cc[sys.VTIME] = 1
+	t.Cc[sys.VTIME] = 0
 
 	if err = p.Ctl(initDefault, inictl); err != nil {
 		return
