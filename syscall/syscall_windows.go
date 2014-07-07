@@ -71,6 +71,8 @@ func GetCommState(h syscall.Handle, dcb *DCB) (err error) {
 type HKEY uintptr
 
 //sys RegOpenKeyEx(h HKEY, name *uint16, options uint32, samDesired REGSAM, result *HKEY) (err error) [failretval!=ERROR_SUCCESS] = advapi32.RegOpenKeyExW
+//sys RegQueryInfoKey(h HKEY, class *uint16, classLen *uint32, reserved *uint32, nSubKeys *uint32, maxSubKeyLen *uint32, maxClassLen *uint32, nValues *uint32, maxValueNameLen *uint32, maxValueLen *uint32, securityDesc *uint32, lastWriteTime *syscall.Filetime) (err error)  [failretval!=ERROR_SUCCESS] = advapi32.RegQueryInfoKeyW
+//sys RegEnumKeyEx(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserved *uint32, class *uint16, classLen *uint32, lastWriteTime *syscall.Filetime) (err error) [failretval!=ERROR_SUCCESS] = advapi32.RegEnumKeyExW
 //sys RegEnumValue(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) [failretval!=ERROR_SUCCESS] = advapi32.RegEnumValueW
 //sys RegQueryValueEx(h HKEY, vName *uint16, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) [failretval!=ERROR_SUCCESS] = advapi32.RegQueryValueExW
 //sys RegCloseKey(h HKEY) [failretval!=ERROR_SUCCESS] = advapi32.RegCloseKey

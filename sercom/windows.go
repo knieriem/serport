@@ -282,7 +282,8 @@ func DeviceList() (list []string) {
 	if err != nil {
 		return
 	}
-	for _, v := range key.Values() {
+	values, _ := key.Values()
+	for _, v := range values {
 		if s := v.String(); s != "" {
 			list = append(list, s)
 		}

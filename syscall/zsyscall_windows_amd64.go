@@ -21,6 +21,8 @@ var (
 	procFlushFileBuffers    = modkernel32.NewProc("FlushFileBuffers")
 	procGetConsoleMode      = modkernel32.NewProc("GetConsoleMode")
 	procRegOpenKeyExW       = modadvapi32.NewProc("RegOpenKeyExW")
+	procRegQueryInfoKeyW    = modadvapi32.NewProc("RegQueryInfoKeyW")
+	procRegEnumKeyExW       = modadvapi32.NewProc("RegEnumKeyExW")
 	procRegEnumValueW       = modadvapi32.NewProc("RegEnumValueW")
 	procRegQueryValueExW    = modadvapi32.NewProc("RegQueryValueExW")
 	procRegCloseKey         = modadvapi32.NewProc("RegCloseKey")
@@ -149,6 +151,30 @@ func GetConsoleMode(h syscall.Handle, mode *uint32) (err error) {
 
 func RegOpenKeyEx(h HKEY, name *uint16, options uint32, samDesired REGSAM, result *HKEY) (err error) {
 	r1, _, e1 := syscall.Syscall6(procRegOpenKeyExW.Addr(), 5, uintptr(h), uintptr(unsafe.Pointer(name)), uintptr(options), uintptr(samDesired), uintptr(unsafe.Pointer(result)), 0)
+	if r1 != ERROR_SUCCESS {
+		if e1 != 0 {
+			err = error(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func RegQueryInfoKey(h HKEY, class *uint16, classLen *uint32, reserved *uint32, nSubKeys *uint32, maxSubKeyLen *uint32, maxClassLen *uint32, nValues *uint32, maxValueNameLen *uint32, maxValueLen *uint32, securityDesc *uint32, lastWriteTime *syscall.Filetime) (err error) {
+	r1, _, e1 := syscall.Syscall12(procRegQueryInfoKeyW.Addr(), 12, uintptr(h), uintptr(unsafe.Pointer(class)), uintptr(unsafe.Pointer(classLen)), uintptr(unsafe.Pointer(reserved)), uintptr(unsafe.Pointer(nSubKeys)), uintptr(unsafe.Pointer(maxSubKeyLen)), uintptr(unsafe.Pointer(maxClassLen)), uintptr(unsafe.Pointer(nValues)), uintptr(unsafe.Pointer(maxValueNameLen)), uintptr(unsafe.Pointer(maxValueLen)), uintptr(unsafe.Pointer(securityDesc)), uintptr(unsafe.Pointer(lastWriteTime)))
+	if r1 != ERROR_SUCCESS {
+		if e1 != 0 {
+			err = error(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func RegEnumKeyEx(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserved *uint32, class *uint16, classLen *uint32, lastWriteTime *syscall.Filetime) (err error) {
+	r1, _, e1 := syscall.Syscall9(procRegEnumKeyExW.Addr(), 8, uintptr(h), uintptr(index), uintptr(unsafe.Pointer(vName)), uintptr(unsafe.Pointer(vNameLen)), uintptr(unsafe.Pointer(reserved)), uintptr(unsafe.Pointer(class)), uintptr(unsafe.Pointer(classLen)), uintptr(unsafe.Pointer(lastWriteTime)), 0)
 	if r1 != ERROR_SUCCESS {
 		if e1 != 0 {
 			err = error(e1)

@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	win "github.com/knieriem/g/syscall"
 	"runtime"
@@ -23,21 +24,91 @@ var (
 	KeyCurrentConfig = &Key{win.HKEY_CURRENT_CONFIG}
 )
 
-func (k *Key) Subkey(subkey ...string) (result *Key, err error) {
+func (k *Key) Subkey(path ...string) (result *Key, err error) {
 	var key win.HKEY
 
 	s := ""
-	for i, v := range subkey {
+	for i, v := range path {
 		if i > 0 {
 			s += "\\" + v
 		} else {
 			s += v
 		}
 	}
-	err = win.RegOpenKeyEx(k.HKEY, syscall.StringToUTF16Ptr(s), 0, win.KEY_READ, &key)
+	u, err := syscall.UTF16PtrFromString(s)
+	if err != nil {
+		return
+	}
+	err = win.RegOpenKeyEx(k.HKEY, u, 0, win.KEY_READ, &key)
 	if err == nil {
 		result = &Key{key}
 		runtime.SetFinalizer(result, (*Key).Close)
+	}
+	return
+}
+
+type KeyBaseInfo struct {
+	Name      string
+	LastWrite time.Time
+}
+
+type KeyInfo struct {
+	KeyBaseInfo
+
+	NumSubKeys   int
+	MaxSubKeyLen int
+
+	MaxClassLen int
+
+	NumValues       int
+	MaxValueNameLen int
+	MaxValueLen     int
+}
+
+func (k *Key) Subkeys() (list []KeyBaseInfo, err error) {
+	var n, maxNameLen, ulen uint32
+	var ft syscall.Filetime
+
+	err = win.RegQueryInfoKey(k.HKEY, nil, nil, nil, &n, &maxNameLen, nil, nil, nil, nil, nil, nil)
+	if err != nil {
+		return
+	}
+
+	maxNameLen++
+	ubuf := make([]uint16, maxNameLen)
+
+	list = make([]KeyBaseInfo, n)
+	for i := uint32(0); i < n; i++ {
+		ulen = maxNameLen
+		err = win.RegEnumKeyEx(k.HKEY, i, &ubuf[0], &ulen, nil, nil, nil, &ft)
+		if err != nil {
+			break
+		}
+		list[i] = KeyBaseInfo{
+			Name:      syscall.UTF16ToString(ubuf[:ulen]),
+			LastWrite: time.Unix(0, ft.Nanoseconds()),
+		}
+	}
+
+	return
+}
+
+func (k *Key) LoopSubKeys(f func(*Key, *KeyBaseInfo) error) (err error) {
+	sub, err := k.Subkeys()
+	if err != nil {
+		return
+	}
+	for i := range sub {
+		subk, err1 := k.Subkey(sub[i].Name)
+		if err1 != nil {
+			err = err1
+			return
+		}
+		err = f(subk, &sub[i])
+		subk.Close()
+		if err != nil {
+			break
+		}
 	}
 	return
 }
@@ -60,36 +131,60 @@ type value struct {
 	*Key
 }
 
-func (k *Key) Values() (vmap map[string]Value) {
-	var ulen, typ, sz uint32
+func (k *Key) Values() (vmap map[string]Value, err error) {
+	var n, maxNameLen, ulen, typ, sz uint32
 
-	ubuf := make([]uint16, 256)
+	err = win.RegQueryInfoKey(k.HKEY, nil, nil, nil, nil, nil, nil, &n, &maxNameLen, nil, nil, nil)
+	if err != nil {
+		return
+	}
+
+	maxNameLen++
+	ubuf := make([]uint16, maxNameLen)
 	vmap = make(map[string]Value, 8)
 
-	for i := 0; ; i++ {
-		ulen = uint32(len(ubuf))
-		err := win.RegEnumValue(k.HKEY, uint32(i), &ubuf[0], &ulen, nil, &typ, nil, &sz)
+	for i := uint32(0); i < n; i++ {
+		ulen = maxNameLen
+		err = win.RegEnumValue(k.HKEY, i, &ubuf[0], &ulen, nil, &typ, nil, &sz)
 		if err != nil {
 			break
 		}
 		s := syscall.UTF16ToString(ubuf[:ulen])
-		utf16 := make([]uint16, ulen+1)
-		copy(utf16, ubuf[:len(utf16)])
-		v := value{utf16, int(typ), int(sz), k}
-		var value Value
-		switch typ {
-		case win.REG_SZ:
-			value = &String{v}
-		case win.REG_DWORD_LITTLE_ENDIAN, win.REG_DWORD_BIG_ENDIAN:
-			value = &Uint32{v}
-		default:
-			fallthrough
-		case win.REG_BINARY:
-			value = &Binary{v}
-		}
-		vmap[s] = value
+		vmap[s] = newValue(ubuf[:ulen+1], typ, sz, k)
 	}
-	return vmap
+	return
+}
+
+func (k *Key) Value(name string) (v Value, err error) {
+	var typ, sz uint32
+
+	uname, err := syscall.UTF16FromString(name)
+	if err != nil {
+		return
+	}
+	err = win.RegQueryValueEx(k.HKEY, &uname[0], nil, &typ, nil, &sz)
+	if err == nil {
+		v = newValue(uname, typ, sz, k)
+	}
+	return
+}
+
+func newValue(uname []uint16, typ, sz uint32, k *Key) Value {
+	utf16 := make([]uint16, len(uname))
+	copy(utf16, uname)
+	v := value{utf16, int(typ), int(sz), k}
+	var value Value
+	switch typ {
+	case win.REG_SZ:
+		value = &String{v}
+	case win.REG_DWORD_LITTLE_ENDIAN, win.REG_DWORD_BIG_ENDIAN:
+		value = &Uint32{v}
+	default:
+		fallthrough
+	case win.REG_BINARY:
+		value = &Binary{v}
+	}
+	return value
 }
 
 type Binary struct {
@@ -110,7 +205,7 @@ func (v *value) Uint32() uint32 {
 	return 0
 }
 func (v *value) String() string {
-	return fmt.Sprint(v.Data())
+	return string(v.Data())
 }
 
 type Uint32 struct {
