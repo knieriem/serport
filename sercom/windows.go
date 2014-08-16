@@ -1,7 +1,7 @@
 package sercom
 
 import (
-	"github.com/knieriem/g/registry"
+	"github.com/knieriem/g/windows/registry"
 
 	win "github.com/knieriem/g/syscall"
 	"os"

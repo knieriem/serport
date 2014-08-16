@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/knieriem/g/registry"
+	"github.com/knieriem/g/windows/registry"
 )
 
 func main() {
