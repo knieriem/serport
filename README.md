@@ -30,10 +30,14 @@
 
 	`ChannelizeReader` and `IsTerminal`.
 
-*	__registry__
+*	__windows/registry__
 
 	Access to Windows' registry database (still read-only). 
 
+
+*	__windows/setupapi__
+
+	Access to some SetupDi functions. 
 
 *	__syscall__
 
