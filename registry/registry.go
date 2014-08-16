@@ -14,18 +14,18 @@ import (
 )
 
 type Key struct {
-	win.HKEY
+	syscall.Handle
 }
 
 var (
-	KeyClassesRoot   = &Key{win.HKEY_CLASSES_ROOT}
-	KeyLocalMachine  = &Key{win.HKEY_LOCAL_MACHINE}
-	KeyCurrentUser   = &Key{win.HKEY_CURRENT_USER}
-	KeyCurrentConfig = &Key{win.HKEY_CURRENT_CONFIG}
+	KeyClassesRoot   = &Key{syscall.HKEY_CLASSES_ROOT}
+	KeyLocalMachine  = &Key{syscall.HKEY_LOCAL_MACHINE}
+	KeyCurrentUser   = &Key{syscall.HKEY_CURRENT_USER}
+	KeyCurrentConfig = &Key{syscall.HKEY_CURRENT_CONFIG}
 )
 
 func (k *Key) Subkey(path ...string) (result *Key, err error) {
-	var key win.HKEY
+	var key syscall.Handle
 
 	s := ""
 	for i, v := range path {
@@ -39,7 +39,7 @@ func (k *Key) Subkey(path ...string) (result *Key, err error) {
 	if err != nil {
 		return
 	}
-	err = win.RegOpenKeyEx(k.HKEY, u, 0, win.KEY_READ, &key)
+	err = syscall.RegOpenKeyEx(k.Handle, u, 0, syscall.KEY_READ, &key)
 	if err == nil {
 		result = &Key{key}
 		runtime.SetFinalizer(result, (*Key).Close)
@@ -69,7 +69,7 @@ func (k *Key) Subkeys() (list []KeyBaseInfo, err error) {
 	var n, maxNameLen, ulen uint32
 	var ft syscall.Filetime
 
-	err = win.RegQueryInfoKey(k.HKEY, nil, nil, nil, &n, &maxNameLen, nil, nil, nil, nil, nil, nil)
+	err = syscall.RegQueryInfoKey(k.Handle, nil, nil, nil, &n, &maxNameLen, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		return
 	}
@@ -80,7 +80,7 @@ func (k *Key) Subkeys() (list []KeyBaseInfo, err error) {
 	list = make([]KeyBaseInfo, n)
 	for i := uint32(0); i < n; i++ {
 		ulen = maxNameLen
-		err = win.RegEnumKeyEx(k.HKEY, i, &ubuf[0], &ulen, nil, nil, nil, &ft)
+		err = syscall.RegEnumKeyEx(k.Handle, i, &ubuf[0], &ulen, nil, nil, nil, &ft)
 		if err != nil {
 			break
 		}
@@ -114,7 +114,7 @@ func (k *Key) LoopSubKeys(f func(*Key, *KeyBaseInfo) error) (err error) {
 }
 
 func (k *Key) Close() {
-	win.RegCloseKey(k.HKEY)
+	syscall.RegCloseKey(k.Handle)
 	runtime.SetFinalizer(k, nil)
 }
 
@@ -134,7 +134,7 @@ type value struct {
 func (k *Key) Values() (vmap map[string]Value, err error) {
 	var n, maxNameLen, ulen, typ, sz uint32
 
-	err = win.RegQueryInfoKey(k.HKEY, nil, nil, nil, nil, nil, nil, &n, &maxNameLen, nil, nil, nil)
+	err = syscall.RegQueryInfoKey(k.Handle, nil, nil, nil, nil, nil, nil, &n, &maxNameLen, nil, nil, nil)
 	if err != nil {
 		return
 	}
@@ -145,7 +145,7 @@ func (k *Key) Values() (vmap map[string]Value, err error) {
 
 	for i := uint32(0); i < n; i++ {
 		ulen = maxNameLen
-		err = win.RegEnumValue(k.HKEY, i, &ubuf[0], &ulen, nil, &typ, nil, &sz)
+		err = win.RegEnumValue(k.Handle, i, &ubuf[0], &ulen, nil, &typ, nil, &sz)
 		if err != nil {
 			break
 		}
@@ -162,7 +162,7 @@ func (k *Key) Value(name string) (v Value, err error) {
 	if err != nil {
 		return
 	}
-	err = win.RegQueryValueEx(k.HKEY, &uname[0], nil, &typ, nil, &sz)
+	err = syscall.RegQueryValueEx(k.Handle, &uname[0], nil, &typ, nil, &sz)
 	if err == nil {
 		v = newValue(uname, typ, sz, k)
 	}
@@ -175,13 +175,13 @@ func newValue(uname []uint16, typ, sz uint32, k *Key) Value {
 	v := value{utf16, int(typ), int(sz), k}
 	var value Value
 	switch typ {
-	case win.REG_SZ:
+	case syscall.REG_SZ:
 		value = &String{v}
-	case win.REG_DWORD_LITTLE_ENDIAN, win.REG_DWORD_BIG_ENDIAN:
+	case syscall.REG_DWORD_LITTLE_ENDIAN, syscall.REG_DWORD_BIG_ENDIAN:
 		value = &Uint32{v}
 	default:
 		fallthrough
-	case win.REG_BINARY:
+	case syscall.REG_BINARY:
 		value = &Binary{v}
 	}
 	return value
@@ -194,7 +194,7 @@ type Binary struct {
 func (v *value) Data() (data []byte) {
 	data = make([]byte, v.sz)
 	sz := uint32(v.sz)
-	if err := win.RegQueryValueEx(v.HKEY, &v.name[0], nil, nil, &data[0], &sz); err == nil {
+	if err := syscall.RegQueryValueEx(v.Handle, &v.name[0], nil, nil, &data[0], &sz); err == nil {
 		data = data[:sz]
 	} else {
 		data = []byte{}
@@ -217,7 +217,7 @@ func (v *Uint32) Uint32() (u uint32) {
 	if len(data) < 4 {
 		return
 	}
-	binary.Read(bytes.NewBuffer(data), byteOrder(v.typ == win.REG_DWORD_LITTLE_ENDIAN), &u)
+	binary.Read(bytes.NewBuffer(data), byteOrder(v.typ == syscall.REG_DWORD_LITTLE_ENDIAN), &u)
 	return u
 }
 func (v *Uint32) String() string {
@@ -243,7 +243,7 @@ func (v *String) String() (s string) {
 }
 
 const (
-	isLittleEndian = win.REG_DWORD == win.REG_DWORD_LITTLE_ENDIAN
+	isLittleEndian = syscall.REG_DWORD == syscall.REG_DWORD_LITTLE_ENDIAN
 )
 
 func byteOrder(little bool) binary.ByteOrder {

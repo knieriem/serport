@@ -6,8 +6,6 @@ package ioutil
 
 import (
 	"syscall"
-
-	win "github.com/knieriem/g/syscall"
 )
 
 type FileDescriptor interface {
@@ -17,6 +15,6 @@ type FileDescriptor interface {
 // IsTerminal returns true if the given file descriptor is a terminal.
 func IsTerminal(f FileDescriptor) (is bool) {
 	var mode uint32
-	is, _ = win.GetConsoleMode(syscall.Handle(f.Fd()), &mode)
+	is = syscall.GetConsoleMode(syscall.Handle(f.Fd()), &mode) == nil
 	return
 }

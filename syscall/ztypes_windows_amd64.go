@@ -31,11 +31,4 @@ type CommTimeouts struct {
 
 const (
 	dcbSize = 0x1c
-
-	HKEY_CLASSES_ROOT   = 0x80000000
-	HKEY_CURRENT_CONFIG = 0x80000005
-	HKEY_CURRENT_USER   = 0x80000001
-	HKEY_LOCAL_MACHINE  = 0x80000002
 )
-
-type REGSAM uint32

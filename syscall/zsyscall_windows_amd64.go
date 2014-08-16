@@ -19,13 +19,7 @@ var (
 	procSetCommState        = modkernel32.NewProc("SetCommState")
 	procGetCommState        = modkernel32.NewProc("GetCommState")
 	procFlushFileBuffers    = modkernel32.NewProc("FlushFileBuffers")
-	procGetConsoleMode      = modkernel32.NewProc("GetConsoleMode")
-	procRegOpenKeyExW       = modadvapi32.NewProc("RegOpenKeyExW")
-	procRegQueryInfoKeyW    = modadvapi32.NewProc("RegQueryInfoKeyW")
-	procRegEnumKeyExW       = modadvapi32.NewProc("RegEnumKeyExW")
 	procRegEnumValueW       = modadvapi32.NewProc("RegEnumValueW")
-	procRegQueryValueExW    = modadvapi32.NewProc("RegQueryValueExW")
-	procRegCloseKey         = modadvapi32.NewProc("RegCloseKey")
 )
 
 func CreateEventW(sa *syscall.SecurityAttributes, manualReset int, initialState int, name *uint16) (hEv syscall.Handle, err error) {
@@ -137,55 +131,7 @@ func FlushFileBuffers(h syscall.Handle) (err error) {
 	return
 }
 
-func GetConsoleMode(h syscall.Handle, mode *uint32) (err error) {
-	r1, _, e1 := syscall.Syscall(procGetConsoleMode.Addr(), 2, uintptr(h), uintptr(unsafe.Pointer(mode)), 0)
-	if r1 == FALSE {
-		if e1 != 0 {
-			err = error(e1)
-		} else {
-			err = syscall.EINVAL
-		}
-	}
-	return
-}
-
-func RegOpenKeyEx(h HKEY, name *uint16, options uint32, samDesired REGSAM, result *HKEY) (err error) {
-	r1, _, e1 := syscall.Syscall6(procRegOpenKeyExW.Addr(), 5, uintptr(h), uintptr(unsafe.Pointer(name)), uintptr(options), uintptr(samDesired), uintptr(unsafe.Pointer(result)), 0)
-	if r1 != ERROR_SUCCESS {
-		if e1 != 0 {
-			err = error(e1)
-		} else {
-			err = syscall.EINVAL
-		}
-	}
-	return
-}
-
-func RegQueryInfoKey(h HKEY, class *uint16, classLen *uint32, reserved *uint32, nSubKeys *uint32, maxSubKeyLen *uint32, maxClassLen *uint32, nValues *uint32, maxValueNameLen *uint32, maxValueLen *uint32, securityDesc *uint32, lastWriteTime *syscall.Filetime) (err error) {
-	r1, _, e1 := syscall.Syscall12(procRegQueryInfoKeyW.Addr(), 12, uintptr(h), uintptr(unsafe.Pointer(class)), uintptr(unsafe.Pointer(classLen)), uintptr(unsafe.Pointer(reserved)), uintptr(unsafe.Pointer(nSubKeys)), uintptr(unsafe.Pointer(maxSubKeyLen)), uintptr(unsafe.Pointer(maxClassLen)), uintptr(unsafe.Pointer(nValues)), uintptr(unsafe.Pointer(maxValueNameLen)), uintptr(unsafe.Pointer(maxValueLen)), uintptr(unsafe.Pointer(securityDesc)), uintptr(unsafe.Pointer(lastWriteTime)))
-	if r1 != ERROR_SUCCESS {
-		if e1 != 0 {
-			err = error(e1)
-		} else {
-			err = syscall.EINVAL
-		}
-	}
-	return
-}
-
-func RegEnumKeyEx(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserved *uint32, class *uint16, classLen *uint32, lastWriteTime *syscall.Filetime) (err error) {
-	r1, _, e1 := syscall.Syscall9(procRegEnumKeyExW.Addr(), 8, uintptr(h), uintptr(index), uintptr(unsafe.Pointer(vName)), uintptr(unsafe.Pointer(vNameLen)), uintptr(unsafe.Pointer(reserved)), uintptr(unsafe.Pointer(class)), uintptr(unsafe.Pointer(classLen)), uintptr(unsafe.Pointer(lastWriteTime)), 0)
-	if r1 != ERROR_SUCCESS {
-		if e1 != 0 {
-			err = error(e1)
-		} else {
-			err = syscall.EINVAL
-		}
-	}
-	return
-}
-
-func RegEnumValue(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) {
+func RegEnumValue(h syscall.Handle, index uint32, vName *uint16, vNameLen *uint32, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) {
 	r1, _, e1 := syscall.Syscall9(procRegEnumValueW.Addr(), 8, uintptr(h), uintptr(index), uintptr(unsafe.Pointer(vName)), uintptr(unsafe.Pointer(vNameLen)), uintptr(unsafe.Pointer(reserved)), uintptr(unsafe.Pointer(typ)), uintptr(unsafe.Pointer(data)), uintptr(unsafe.Pointer(sz)), 0)
 	if r1 != ERROR_SUCCESS {
 		if e1 != 0 {
@@ -194,22 +140,5 @@ func RegEnumValue(h HKEY, index uint32, vName *uint16, vNameLen *uint32, reserve
 			err = syscall.EINVAL
 		}
 	}
-	return
-}
-
-func RegQueryValueEx(h HKEY, vName *uint16, reserved *uint32, typ *uint32, data *byte, sz *uint32) (err error) {
-	r1, _, e1 := syscall.Syscall6(procRegQueryValueExW.Addr(), 6, uintptr(h), uintptr(unsafe.Pointer(vName)), uintptr(unsafe.Pointer(reserved)), uintptr(unsafe.Pointer(typ)), uintptr(unsafe.Pointer(data)), uintptr(unsafe.Pointer(sz)))
-	if r1 != ERROR_SUCCESS {
-		if e1 != 0 {
-			err = error(e1)
-		} else {
-			err = syscall.EINVAL
-		}
-	}
-	return
-}
-
-func RegCloseKey(h HKEY) {
-	syscall.Syscall(procRegCloseKey.Addr(), 1, uintptr(h), 0, 0)
 	return
 }

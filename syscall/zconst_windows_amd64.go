@@ -38,24 +38,4 @@ const (
 	FALSE = 0x0
 
 	ERROR_SUCCESS = 0x0
-
-	REG_BINARY              = 0x3
-	REG_DWORD               = 0x4
-	REG_DWORD_LITTLE_ENDIAN = 0x4
-	REG_DWORD_BIG_ENDIAN    = 0x5
-
-	REG_QWORD              = 0xb
-	REG_SZ                 = 0x1
-	REG_MULTI_SZ           = 0x7
-	KEY_ALL_ACCESS         = 0xf003f
-	KEY_CREATE_LINK        = 0x20
-	KEY_CREATE_SUB_KEY     = 0x4
-	KEY_ENUMERATE_SUB_KEYS = 0x8
-	KEY_EXECUTE            = 0x20019
-	KEY_NOTIFY             = 0x10
-	KEY_QUERY_VALUE        = 0x1
-	KEY_READ               = 0x20019
-	KEY_SET_VALUE          = 0x2
-
-	KEY_WRITE = 0x20006
 )
