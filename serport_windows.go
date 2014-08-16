@@ -1,4 +1,4 @@
-package sercom
+package serport
 
 import (
 	"github.com/knieriem/g/windows/registry"

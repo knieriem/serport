@@ -1,5 +1,5 @@
 /*
-Sercom provides access to local, and remote (9P served)
+Serport provides access to local, and remote (9P served)
 serial ports on Linux and Windows. The Port interface is still
 incomplete -- basic access to serial ports works, but some
 functions might be missing.
@@ -39,4 +39,4 @@ subset is supported:
 	}	Execute pending commands
 
 */
-package sercom
+package serport

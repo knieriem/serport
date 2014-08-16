@@ -17,8 +17,8 @@ import (
 	"github.com/knieriem/g/go9p"
 	"github.com/knieriem/g/go9p/user"
 	"github.com/knieriem/g/netutil"
-	"github.com/knieriem/g/sercom"
 	"github.com/knieriem/g/text"
+	"github.com/knieriem/serport"
 )
 
 var (
@@ -50,7 +50,7 @@ func main() {
 	cherr = make(chan error)
 
 	if *list {
-		for _, s := range sercom.DeviceList() {
+		for _, s := range serport.DeviceList() {
 			fmt.Println(s)
 		}
 		return
@@ -59,7 +59,7 @@ func main() {
 	args := flag.Args()
 
 	if len(args) == 0 {
-		l := sercom.DeviceList()
+		l := serport.DeviceList()
 		if len(l) == 0 {
 			return
 		}
@@ -145,7 +145,7 @@ func main() {
 	os.Exit(0)
 }
 
-func openport(dev string, args []string) (port sercom.Port, err error) {
+func openport(dev string, args []string) (port serport.Port, err error) {
 	var c net.Conn
 
 	prot := "local"
@@ -163,9 +163,9 @@ func openport(dev string, args []string) (port sercom.Port, err error) {
 			port, err = mountConn(c)
 		}
 	} else if fi, e := os.Stat(dev); e == nil && fi.IsDir() {
-		port, err = sercom.OpenFsDev(dev)
+		port, err = serport.OpenFsDev(dev)
 	} else {
-		port, err = sercom.Open(dev, "")
+		port, err = serport.Open(dev, "")
 	}
 
 	if err == nil {
@@ -229,8 +229,8 @@ func copyproc(to io.Writer, from io.Reader, tracePrefix string) {
 	cherr <- err
 }
 
-func mountConn(c net.Conn) (port sercom.Port, err error) {
-	port, clnt, err := sercom.MountConn(c, "")
+func mountConn(c net.Conn) (port serport.Port, err error) {
+	port, clnt, err := serport.MountConn(c, "")
 	if err == nil {
 		switch {
 		case *debugall:
@@ -243,7 +243,7 @@ func mountConn(c net.Conn) (port sercom.Port, err error) {
 	return
 }
 
-func newServer(dev sercom.Port) (s *srv.Fsrv, err error) {
+func newServer(dev serport.Port) (s *srv.Fsrv, err error) {
 	user := user.Current()
 	root := new(srv.File)
 	err = root.Add(nil, "/", user, nil, p.DMDIR|0555, nil)
@@ -251,7 +251,7 @@ func newServer(dev sercom.Port) (s *srv.Fsrv, err error) {
 		return
 	}
 
-	err = sercom.RegisterFiles9P(root, dev, user)
+	err = serport.RegisterFiles9P(root, dev, user)
 	if err != nil {
 		return
 	}
