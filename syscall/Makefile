@@ -1,4 +1,4 @@
-W=../win
+W=../windows
 
 OSARCH=\
 	linux_arm\
