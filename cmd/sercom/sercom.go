@@ -19,6 +19,7 @@ import (
 	"github.com/knieriem/g/netutil"
 	"github.com/knieriem/g/text"
 	"github.com/knieriem/serport"
+	"github.com/knieriem/serport/serenum"
 )
 
 var (
@@ -50,8 +51,8 @@ func main() {
 	cherr = make(chan error)
 
 	if *list {
-		for _, s := range serport.DeviceList() {
-			fmt.Println(s)
+		for _, info := range serenum.Ports() {
+			fmt.Println(info.Format(nil))
 		}
 		return
 	}
@@ -59,11 +60,11 @@ func main() {
 	args := flag.Args()
 
 	if len(args) == 0 {
-		l := serport.DeviceList()
+		l := serenum.Ports()
 		if len(l) == 0 {
 			return
 		}
-		dev = l[0]
+		dev = l[0].Device
 	} else {
 		dev = args[0]
 		args = args[1:]
@@ -166,6 +167,9 @@ func openport(dev string, args []string) (port serport.Port, err error) {
 		port, err = serport.OpenFsDev(dev)
 	} else {
 		port, err = serport.Open(dev, "")
+		if err == nil {
+			fmt.Fprintln(os.Stderr, "# opened", serenum.Lookup(dev).Format(nil))
+		}
 	}
 
 	if err == nil {

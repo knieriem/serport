@@ -2,7 +2,6 @@ package serport
 
 import (
 	"os"
-	"path/filepath"
 	"syscall"
 
 	sys "github.com/knieriem/g/syscall"
@@ -239,17 +238,4 @@ func setBlocking(fd uintptr) (err error) {
 		_, err = sys.Fcntl(fd, syscall.F_SETFL, flags&^syscall.O_NONBLOCK)
 	}
 	return
-}
-
-// Get a list of (probably) present serial devices
-func DeviceList() (list []string) {
-	list = append(list, globDev("/dev/ttyUSB[0-9]*")...)
-	list = append(list, globDev("/dev/ttyACM[0-9]*")...)
-	list = append(list, globDev("/dev/ttyS[0-9]*")...)
-	return
-}
-
-func globDev(pat string) []string {
-	s, _ := filepath.Glob(pat)
-	return s
 }

@@ -1,8 +1,6 @@
 package serport
 
 import (
-	"github.com/knieriem/g/windows/registry"
-
 	win "github.com/knieriem/g/syscall"
 	"os"
 	"path/filepath"
@@ -274,19 +272,4 @@ func (d *dev) ModemLines() LineState {
 	var ls LineState
 	// TBD
 	return ls
-}
-
-// Get a list of (probably) present serial devices
-func DeviceList() (list []string) {
-	key, err := registry.KeyLocalMachine.Subkey("HARDWARE", "DEVICEMAP", "SERIALCOMM")
-	if err != nil {
-		return
-	}
-	values, _ := key.Values()
-	for _, v := range values {
-		if s := v.String(); s != "" {
-			list = append(list, s)
-		}
-	}
-	return
 }
