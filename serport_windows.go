@@ -2,8 +2,10 @@ package serport
 
 import (
 	win "github.com/knieriem/g/syscall"
+	"io"
 	"os"
 	"path/filepath"
+	"sync"
 	"syscall"
 )
 
@@ -13,6 +15,8 @@ const (
 
 type hw struct {
 	fd syscall.Handle
+	sync.Mutex
+	closing bool
 
 	initDone    bool
 	dcb, dcbsav win.DCB
@@ -83,9 +87,14 @@ try:
 func (p *dev) Read(buf []byte) (int, error) {
 	var done uint32
 
+	p.Lock()
+	defer p.Unlock()
 	for {
 		var ov syscall.Overlapped
 
+		if p.closing {
+			return 0, io.EOF
+		}
 		ov.HEvent = p.ev.r
 		if e := syscall.ReadFile(p.fd, buf, &done, &ov); e != nil {
 			if e != syscall.ERROR_IO_PENDING {
@@ -125,6 +134,9 @@ func (p *dev) Write(buf []byte) (int, error) {
 }
 
 func (d *dev) Close() (err error) {
+	d.closing = true
+	d.Lock()
+	defer d.Unlock()
 	d.Drain()
 	syscall.CloseHandle(d.ev.r)
 	syscall.CloseHandle(d.ev.w)
