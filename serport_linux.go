@@ -2,7 +2,8 @@ package serport
 
 import (
 	"os"
-	"syscall"
+
+	"golang.org/x/sys/unix"
 
 	sys "github.com/knieriem/g/syscall"
 )
@@ -233,9 +234,9 @@ var speedMap = map[int]int{
 func setBlocking(fd uintptr) (err error) {
 	var flags int
 
-	flags, err = sys.Fcntl(fd, syscall.F_GETFL, 0)
+	flags, err = sys.Fcntl(fd, unix.F_GETFL, 0)
 	if err == nil {
-		_, err = sys.Fcntl(fd, syscall.F_SETFL, flags&^syscall.O_NONBLOCK)
+		_, err = sys.Fcntl(fd, unix.F_SETFL, flags&^unix.O_NONBLOCK)
 	}
 	return
 }
