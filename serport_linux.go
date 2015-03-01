@@ -25,23 +25,30 @@ func Open(filename string, inictl string) (port Port, err error) {
 
 	// NONBLOCK prevents Open from blocking
 	// until DCD is asserted from modem
-	if file, err = os.OpenFile(filename, os.O_RDWR|syscall.O_NOCTTY|syscall.O_NONBLOCK, 0); err != nil {
+	if file, err = os.OpenFile(filename, os.O_RDWR|unix.O_NOCTTY|unix.O_NONBLOCK, 0); err != nil {
 		return
 	}
 	p := new(dev)
 	p.File = file
 	p.name = filename
 	p.encaps = p
+	t := &p.t
+
 	fd := file.Fd()
+	_, _, errno := unix.Syscall(unix.SYS_IOCTL, fd, unix.TIOCEXCL, 0)
+	if errno != 0 {
+		err = errno
+		goto fail
+	}
 	err = setBlocking(fd)
 	if err != nil {
 		err = p.error("set blocking", err)
+		goto fail
 	}
 
-	t := &p.t
 	if err = sys.IoctlTermios(fd, sys.TCGETS, t); err != nil {
 		err = p.error("get term attr", err)
-		return
+		goto fail
 	}
 	p.tOrig = p.t
 	p.tsav = p.t
@@ -57,10 +64,14 @@ func Open(filename string, inictl string) (port Port, err error) {
 	t.Cc[sys.VTIME] = 0
 
 	if err = p.Ctl(initDefault, inictl); err != nil {
-		return
+		goto fail
 	}
 
 	port = p
+	return
+
+fail:
+	file.Close()
 	return
 }
 
