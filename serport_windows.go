@@ -69,10 +69,10 @@ try:
 	}
 
 	cto := win.CommTimeouts{
-		//		ReadIntervalTimeout: ^uint32(0),
-		//		ReadTotalTimeoutMultiplier: ^uint32(0),
-		//		ReadTotalTimeoutConstant: ^uint32(0)-1,
-		ReadIntervalTimeout: 10,
+		ReadIntervalTimeout:        ^uint32(0),
+		ReadTotalTimeoutMultiplier: ^uint32(0),
+		ReadTotalTimeoutConstant:   200,
+		//	ReadIntervalTimeout: 10,
 	}
 	if e = win.SetCommTimeouts(d.fd, &cto); e != nil {
 		goto error
