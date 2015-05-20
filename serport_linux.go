@@ -1,11 +1,13 @@
 package serport
 
 import (
+	"io"
 	"os"
 
 	"golang.org/x/sys/unix"
 
 	sys "github.com/knieriem/g/syscall"
+	"github.com/knieriem/g/syscall/epoll"
 )
 
 const (
@@ -16,6 +18,8 @@ type hw struct {
 	*os.File
 	inCtl          bool
 	t, tsav, tOrig sys.Termios
+	closing        bool
+	rdpoll         *epoll.Pollster
 }
 
 // Open a local serial port.
@@ -66,6 +70,12 @@ func Open(filename string, inictl string) (port Port, err error) {
 	if err = p.Ctl(initDefault, inictl); err != nil {
 		goto fail
 	}
+	if p.rdpoll, err = epoll.NewPollster(); err != nil {
+		return
+	}
+	if p.rdpoll.AddFD(int(fd), 'r', true); err != nil {
+		return
+	}
 
 	port = p
 	return
@@ -75,7 +85,27 @@ fail:
 	return
 }
 
+func (p *dev) Read(buf []byte) (nread int, err error) {
+	for {
+		if p.closing {
+			return 0, io.EOF
+		}
+		_, mode, err1 := p.rdpoll.WaitFD(250e6)
+		if err1 != nil {
+			err = err1
+			return
+		}
+		if mode == 0 {
+			// WaitFD timeout
+			continue
+		}
+		return p.hw.Read(buf)
+	}
+}
+
 func (p *dev) Close() error {
+	p.closing = true
+	p.rdpoll.Close()
 	sys.IoctlTermios(p.Fd(), sys.TCSETSW, &p.tOrig)
 	return p.hw.Close()
 }
