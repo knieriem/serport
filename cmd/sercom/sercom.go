@@ -17,9 +17,9 @@ import (
 	"github.com/knieriem/g/go9p"
 	"github.com/knieriem/g/go9p/user"
 	"github.com/knieriem/g/netutil"
-	"github.com/knieriem/g/text"
 	"github.com/knieriem/serport"
 	"github.com/knieriem/serport/serenum"
+	"github.com/knieriem/text/rc"
 )
 
 var (
@@ -179,7 +179,7 @@ func openport(dev string, args []string) (port serport.Port, err error) {
 }
 
 func connectToCommand(command string) (c net.Conn, err error) {
-	cmdLine := text.Tokenize(command)
+	cmdLine := rc.Tokenize(command)
 
 	cmd := exec.Command(cmdLine[0], cmdLine[1:]...)
 	r, err := cmd.StdoutPipe()
