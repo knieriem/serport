@@ -19,6 +19,7 @@ import (
 	"github.com/knieriem/g/ioutil/terminal"
 	"github.com/knieriem/g/netutil"
 	"github.com/knieriem/serport"
+	"github.com/knieriem/serport/encoding"
 	"github.com/knieriem/serport/serenum"
 	"github.com/knieriem/text/rc"
 )
@@ -26,9 +27,13 @@ import (
 var (
 	serveAddr = flag.String("serve", "", "serve device via 9P at a tcp addr, or (with `-') at stdin/out")
 
-	list     = flag.Bool("list", false, "list serial devices")
-	debug    = flag.Bool("9d", false, "print 9P debug messages")
-	debugall = flag.Bool("9D", false, "print 9P packets as well as debug messages")
+	list       = flag.Bool("list", false, "list serial devices")
+	debug      = flag.Bool("9d", false, "print 9P debug messages")
+	debugall   = flag.Bool("9D", false, "print 9P packets as well as debug messages")
+	keepEcho   = flag.Bool("echo", false, "keep terminal's echo flag enabled")
+	keepLine   = flag.Bool("line", false, "keep terminal's line flag enabled")
+	crlfMode   = flag.Bool("crlf", false, "target needs CRLF line endings")
+	binaryMode = flag.Bool("binary", false, "force binary mode (no modifications) even when using terminal")
 )
 
 type connOps struct {
@@ -133,8 +138,30 @@ func main() {
 		if r := setupTerminal(os.Stdin); r != nil {
 			restoreTerminal = r
 		}
-		go copyproc(port, os.Stdin, "")
-		go copyproc(os.Stdout, port, "")
+
+		// setup target encoding
+		portRW := io.ReadWriter(port)
+		switch {
+		case *crlfMode:
+			w := new(encoding.Wrapper)
+			w.WrapReader(portRW, new(encoding.StripCR))
+			w.WrapWriter(portRW, new(encoding.InsertCR))
+			portRW = w
+		default:
+			w := new(encoding.Wrapper).WrapReader(portRW, new(encoding.StripCR))
+			portRW = w.WrapWriter(portRW, nil)
+
+		case *binaryMode:
+		}
+
+		// setup input encoding
+		in := io.Reader(os.Stdin)
+		if !*binaryMode {
+			in = new(encoding.Wrapper).WrapReader(in, new(encoding.TermInput))
+		}
+
+		go copyproc(portRW, in, "")
+		go copyproc(os.Stdout, portRW, "")
 	}
 
 	sig := make(chan os.Signal, 1)
