@@ -16,6 +16,7 @@ import (
 	"code.google.com/p/go9p/p/srv"
 	"github.com/knieriem/g/go9p"
 	"github.com/knieriem/g/go9p/user"
+	"github.com/knieriem/g/ioutil/terminal"
 	"github.com/knieriem/g/netutil"
 	"github.com/knieriem/serport"
 	"github.com/knieriem/serport/serenum"
@@ -84,6 +85,8 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	restoreTerminal := func() {}
+
 	if *serveAddr != "" {
 		s, err := newServer(port)
 		if err != nil {
@@ -127,6 +130,9 @@ func main() {
 		go copyproc(port, port2, "<-")
 		go copyproc(port2, port, "->")
 	} else {
+		if r := setupTerminal(os.Stdin); r != nil {
+			restoreTerminal = r
+		}
 		go copyproc(port, os.Stdin, "")
 		go copyproc(os.Stdout, port, "")
 	}
@@ -143,7 +149,29 @@ func main() {
 		log.Println(s)
 	}
 	port.Close()
+	restoreTerminal()
 	os.Exit(0)
+}
+
+func setupTerminal(fd terminal.FileDescriptor) (restore func()) {
+	if !terminal.IsTerminal(fd) {
+		return
+	}
+	var clearFlags terminal.Flag
+	if !*keepEcho {
+		clearFlags |= terminal.EchoFlag
+	}
+	if !*keepLine {
+		clearFlags |= terminal.LineFlag
+	}
+	oldState, err := terminal.DisableFlags(fd, clearFlags)
+	if err != nil {
+		log.Fatal(err)
+	}
+	restore = func() {
+		terminal.Restore(fd, oldState)
+	}
+	return
 }
 
 func openport(dev string, args []string) (port serport.Port, err error) {
