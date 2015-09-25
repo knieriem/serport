@@ -3,7 +3,6 @@ package serport
 import (
 	win "github.com/knieriem/g/syscall"
 	"io"
-	"os"
 	"path/filepath"
 	"sync"
 	"syscall"
@@ -47,7 +46,7 @@ func Open(file string, inictl string) (p Port, err error) {
 
 	goto try
 error:
-	err = &os.PathError{"open", file, e}
+	err = pathError("open", file, e)
 	return
 
 try:
@@ -98,10 +97,10 @@ func (p *dev) Read(buf []byte) (int, error) {
 		ov.HEvent = p.ev.r
 		if e := syscall.ReadFile(p.fd, buf, &done, &ov); e != nil {
 			if e != syscall.ERROR_IO_PENDING {
-				return 0, &os.PathError{"reading from", p.name, e}
+				return 0, p.error("reading from", e)
 			}
 			if e = win.GetOverlappedResult(p.fd, &ov, &done, 1); e != nil {
-				return 0, &os.PathError{"reading from", p.name, e}
+				return 0, p.error("reading from", e)
 			}
 		}
 		if done > 0 {
@@ -120,10 +119,10 @@ func (p *dev) Write(buf []byte) (int, error) {
 		ov.HEvent = p.ev.w
 		if e := syscall.WriteFile(p.fd, buf, &done, &ov); e != nil {
 			if e != syscall.ERROR_IO_PENDING {
-				return 0, &os.PathError{"writing to", p.name, e}
+				return 0, p.error("writing to", e)
 			}
 			if e = win.GetOverlappedResult(p.fd, &ov, &done, 1); e != nil {
-				return 0, &os.PathError{"writing to", p.name, e}
+				return 0, p.error("writing to", e)
 			}
 		}
 		if done > 0 {
@@ -223,7 +222,7 @@ func (d *dev) SetDtr(on bool) (err error) {
 
 func (d *dev) commfn(name string, f int) (err error) {
 	if e := win.EscapeCommFunction(d.fd, uint32(f)); e != nil {
-		return &os.PathError{name, d.name, e}
+		return d.error(name, e)
 	}
 	return
 }

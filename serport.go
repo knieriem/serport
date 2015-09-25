@@ -108,12 +108,16 @@ func (d *dev) Commit() {
 }
 
 func (p *dev) error(action string, err error) error {
-	return &os.PathError{Op: action, Path: p.name, Err: err}
+	return pathError(action, p.name, err)
 }
 
 func (p *dev) errorf(action string, format string, args ...interface{}) error {
 	err := errors.New(fmt.Sprintf(format, args...))
-	return &os.PathError{Op: action, Path: p.name, Err: err}
+	return pathError(action, p.name, err)
+}
+
+func pathError(op, path string, err error) error {
+	return &os.PathError{Op: op, Path: path, Err: err}
 }
 
 type LineState struct {
