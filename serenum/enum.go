@@ -42,12 +42,10 @@ func (p *PortInfo) Format(t *template.Template) string {
 	return b.String()
 }
 
-const StdFormat = `{{.Device}}	(` +
-	`{{if $d := .Desc}}{{with .Enumerator}}{{if not (contains $d .)}}{{.}}: {{end}}{{end}}{{$d}}{{if .Driver}}, {{end}}{{end}}` +
+const StdFormat = `{{if $d := .Desc}}{{with .Enumerator}}{{if not (contains $d .)}}{{.}}: {{end}}{{end}}{{$d}}{{if .Driver}}, {{end}}{{end}}` +
 	`{{with .Driver}}driver: {{.}}{{end}}` +
 	`{{if .VendorID}}, v/p: {{.VendorID}}{{with .ProductID}}:{{.}}{{end}}{{end}}` +
-	`{{with .SerialNumber}}, s/n: {{.}}{{end}}` +
-	`)`
+	`{{with .SerialNumber}}, s/n: {{.}}{{end}}`
 
 var tpl = template.Must(template.New("format").Funcs(template.FuncMap{
 	"contains": func(s, sub string) bool {

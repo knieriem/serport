@@ -52,7 +52,7 @@ func main() {
 
 	if *list {
 		for _, info := range serenum.Ports() {
-			fmt.Println(info.Format(nil))
+			fmt.Println(info.Device + "\n\t" + info.Format(nil))
 		}
 		return
 	}
