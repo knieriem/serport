@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	serveAddr = flag.String("serve", "", "serve device via 9P at a tcp addr, or (with `-') at stdin/out")
+	serveAddr = flag.String("serve", "", "serve device via 9P at a tcp `addr`, or (with `-') at stdin/out")
 
 	list       = flag.Bool("list", false, "list serial devices")
 	debug      = flag.Bool("9d", false, "print 9P debug messages")
@@ -34,6 +34,7 @@ var (
 	keepLine   = flag.Bool("line", false, "keep terminal's line flag enabled")
 	crlfMode   = flag.Bool("crlf", false, "target needs CRLF line endings")
 	binaryMode = flag.Bool("binary", false, "force binary mode (no modifications) even when using terminal")
+	bridgePort = flag.String("bridge", "", "a serial `port` to copy data to and from")
 )
 
 type connOps struct {
@@ -50,8 +51,11 @@ type traceLine struct {
 var traceC chan traceLine
 
 func main() {
-	var dev string
-
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "usage: %s [DEVICE]\n\n", os.Args[0])
+		flag.PrintDefaults()
+		os.Exit(2)
+	}
 	flag.Parse()
 	log.SetFlags(log.Lshortfile)
 	cherr = make(chan error)
@@ -63,29 +67,12 @@ func main() {
 		return
 	}
 
-	args := flag.Args()
-
-	if len(args) == 0 {
-		l := serenum.Ports()
-		if len(l) == 0 {
-			return
-		}
-		dev = l[0].Device
-	} else {
-		dev = args[0]
-		args = args[1:]
+	devSpec := flag.Arg(0)
+	if flag.NArg() > 0 {
+		devSpec = strings.Join(flag.Args(), ",")
 	}
 
-	var args2 []string
-	for i, a := range args {
-		if a == "." {
-			args2 = args[i+1:]
-			args = args[:i]
-			break
-		}
-	}
-
-	port, err := openport(dev, args)
+	port, err := openport(devSpec)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -112,8 +99,8 @@ func main() {
 				cherr <- io.EOF
 			}()
 		}
-	} else if len(args2) > 0 {
-		port2, err := openport(args2[0], args2[1:])
+	} else if *bridgePort != "" {
+		port2, err := openport(*bridgePort)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -201,8 +188,12 @@ func setupTerminal(fd terminal.FileDescriptor) (restore func()) {
 	return
 }
 
-func openport(dev string, args []string) (port serport.Port, err error) {
+func openport(portSpec string) (port serport.Port, err error) {
 	var c net.Conn
+
+	f := strings.Split(portSpec, ",")
+	dev := f[0]
+	args := f[1:]
 
 	prot := "local"
 	dest := ""
@@ -221,9 +212,10 @@ func openport(dev string, args []string) (port serport.Port, err error) {
 	} else if fi, e := os.Stat(dev); e == nil && fi.IsDir() {
 		port, err = serport.OpenFsDev(dev)
 	} else {
-		port, err = serport.Open(dev, "")
+		var name string
+		port, name, err = serport.Choose(dev, "")
 		if err == nil {
-			fmt.Fprintln(os.Stderr, "# opened", serenum.Lookup(dev).Format(nil))
+			fmt.Fprintln(os.Stderr, "# opened", name+" ("+serenum.Lookup(name).Format(nil)+")")
 		}
 	}
 
