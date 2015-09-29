@@ -188,12 +188,27 @@ func setupTerminal(fd terminal.FileDescriptor) (restore func()) {
 	return
 }
 
+const (
+	defaultBaudrate = "b115200"
+)
+
 func openport(portSpec string) (port serport.Port, err error) {
 	var c net.Conn
 
 	f := strings.Split(portSpec, ",")
 	dev := f[0]
 	args := f[1:]
+
+	for _, a := range args {
+		if strings.HasPrefix(a, "b") {
+			goto skipDefaultBaudrate
+		}
+	}
+
+	args = append([]string{defaultBaudrate}, args...)
+skipDefaultBaudrate:
+	addr := dev
+	details := ""
 
 	prot := "local"
 	dest := ""
@@ -214,13 +229,28 @@ func openport(portSpec string) (port serport.Port, err error) {
 	} else {
 		var name string
 		port, name, err = serport.Choose(dev, "")
-		if err == nil {
-			fmt.Fprintln(os.Stderr, "# opened", name+" ("+serenum.Lookup(name).Format(nil)+")")
+		if err != nil {
+			return
 		}
+		addr = name
+		details = serenum.Lookup(name).Format(nil)
 	}
 
-	if err == nil {
+	if len(args) != 0 {
+		addr += "," + strings.Join(args, ",")
+	}
+	if err != nil {
+		return
+	}
+	if len(args) != 0 {
 		err = port.Ctl(strings.Join(args, " "))
+		if err != nil {
+			return
+		}
+	}
+	fmt.Fprintln(os.Stderr, "# active device:", addr)
+	if details != "" {
+		fmt.Fprint(os.Stderr, "#\t(", details, ")\n")
 	}
 	return
 }
