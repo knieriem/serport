@@ -77,7 +77,6 @@ type InsertCR struct {
 
 func (e *InsertCR) Encode(src []byte) []byte {
 	var dest []byte
-//	fmt.Println("DOSW", src)
 	push := func(b byte) {
 		if dest != nil {
 			dest = append(dest, b)
@@ -115,7 +114,6 @@ func (wp *Wrapper) Write(buf []byte) (int, error) {
 	if e := wp.Encoder; e != nil {
 		buf = e.Encode(buf)
 	}
-//	fmt.Println("EWR", buf)
 	return wp.w.Write(buf)
 }
 
