@@ -67,6 +67,10 @@ func main() {
 		return
 	}
 
+	if terminal.IsTerminal(os.Stdout) {
+		fmt.Println("# Sercom v0.1")
+	}
+
 	devSpec := flag.Arg(0)
 	if flag.NArg() > 0 {
 		devSpec = strings.Join(flag.Args(), ",")
