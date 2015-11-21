@@ -1,9 +1,11 @@
 package serport
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/knieriem/g/ioutil/terminal"
@@ -60,21 +62,24 @@ func matchDevice(expr string) (name string, err error) {
 }
 
 func choosePort(mode string) (name string, err error) {
-	sep := "-"
+	sep := " .. "
 	list := serenum.Ports()
 	switch len(list) {
 	case 0:
 	case 1:
+		sep = ""
 		if mode != "?" {
 			name = list[0].Device
 			return
 		}
+	case 2:
+		sep = ", "
+		fallthrough
 	default:
 		if mode == "!" {
 			name = list[0].Device
 			return
 		}
-		sep = ", "
 	}
 	t, err := terminal.Open()
 	if err != nil {
@@ -84,24 +89,38 @@ func choosePort(mode string) (name string, err error) {
 
 	if len(list) == 0 {
 		fmt.Fprint(t, "Enter serial port: ")
-		_, err = fmt.Fscanln(t, &name)
+		_, err = fmt.Fscan(t, &name)
 		return
 	}
 	fmt.Fprintln(t, "\nChoose a serial port: ")
 	for i, p := range list {
 		fmt.Fprintf(t, "  %d\t%v (%v)\n", i, p.Device, p.Format(nil))
 	}
-	fmt.Fprint(t, "Enter a number (0", sep, len(list)-1, "): ")
-
-	var i int
-	_, err = fmt.Fscanln(t, &i)
-	if err == nil {
-		if i < len(list) {
-			name = list[i].Device
-		} else {
-			err = errors.New("value exceeds maximum index")
-		}
+	if sep == "" {
+		fmt.Fprint(t, "\nPress return to select the device.")
+	} else {
+		fmt.Fprint(t, "\nEnter a number {(0)", sep, len(list)-1, "}: ")
 	}
-	fmt.Fprint(t, "\n")
+
+	s := bufio.NewScanner(t)
+	if !s.Scan() {
+		err = s.Err()
+		return
+	}
+	input := strings.TrimSpace(s.Text())
+	var i int
+	if input != "" {
+		i64, err1 := strconv.ParseInt(input, 10, 32)
+		if err1 != nil {
+			err = err1
+			return
+		}
+		i = int(i64)
+	}
+	if i >= len(list) {
+		err = errors.New("value exceeds maximum index")
+		return
+	}
+	name = list[i].Device
 	return
 }
