@@ -52,7 +52,7 @@ func readDeviceInfo(name string) (port *PortInfo, ok bool) {
 	path := linkTarget("/sys/class/tty", name)
 
 	// skip platform devices -- they appear not to be real devices
-	if strings.HasPrefix(path, "/sys/devices/platform/") {
+	if strings.HasPrefix(path, "/sys/devices/platform/serial8250/") {
 		return
 	}
 
