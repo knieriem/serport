@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"bufio"
 	"io"
 	"log"
 	"net"
@@ -22,6 +23,7 @@ import (
 	"github.com/knieriem/serport/encoding"
 	"github.com/knieriem/serport/serenum"
 	"github.com/knieriem/text/rc"
+	"github.com/knieriem/text/cmdline"
 )
 
 var (
@@ -35,6 +37,7 @@ var (
 	crlfMode   = flag.Bool("crlf", false, "target needs CRLF line endings")
 	binaryMode = flag.Bool("binary", false, "force binary mode (no modifications) even when using terminal")
 	bridgePort = flag.String("bridge", "", "a serial `port` to copy data to and from")
+	cmdLine = flag.Bool("cmdline", false, "wrap cmdline package around the input")
 )
 
 type connOps struct {
@@ -145,13 +148,27 @@ func main() {
 		case *binaryMode:
 		}
 
-		// setup input encoding
-		in := io.Reader(os.Stdin)
-		if !*binaryMode {
-			in = new(encoding.Wrapper).WrapReader(in, new(encoding.TermInput))
-		}
+		if *cmdLine {
+			cl := cmdline.NewCmdLine(bufio.NewScanner(os.Stdin), map[string]cmdline.Cmd{})
+			cl.Prompt = "% "
+			cl.Stdout = os.Stdout
+			cl.ConsoleOut = os.Stdout
+			cl.Errf = func(format string, args ...interface{}) {
+				fmt.Printf(format, args...)
+			}
+			cl.Forward = portRW
+			go func() {
+				cherr <- cl.Process()
+			}()
+		} else {
+			// setup input encoding
+			in := io.Reader(os.Stdin)
+			if !*binaryMode {
+				in = new(encoding.Wrapper).WrapReader(in, new(encoding.TermInput))
+			}
 
-		go copyproc(portRW, in, "")
+			go copyproc(portRW, in, "")
+		}
 		go copyproc(os.Stdout, portRW, "")
 	}
 
