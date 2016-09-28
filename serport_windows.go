@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	initDefault = "r1 d1 b115200 l8 pn s1"
+	initDefault = "b115200 l8 pn r1 s1"
 )
 
 type hw struct {
