@@ -43,13 +43,17 @@ type dev struct {
 }
 
 func (p *dev) Ctl(cmds ...string) error {
+	var err error
 	updateCtlNow := func() {
 		p.inCtl = false
-		p.updateCtl()
+		err = p.updateCtl()
 		p.inCtl = true
 	}
 
 	p.inCtl = true
+	defer func() {
+		p.inCtl = false
+	}()
 	d := p.encaps
 
 	for _, s := range cmds {
@@ -57,7 +61,6 @@ func (p *dev) Ctl(cmds ...string) error {
 			var n int
 			var c byte
 			var cmd byte
-			var err error
 
 			cmd = f[0]
 			if len(f) > 1 {
@@ -74,25 +77,31 @@ func (p *dev) Ctl(cmds ...string) error {
 			//fmt.Printf("Ctl: %c %d\n", cmd, n)
 			switch cmd {
 			case 'd':
-				d.SetDtr(n == 1)
+				err = d.SetDtr(n == 1)
 			case 'r':
-				d.SetRts(n == 1)
+				err = d.SetRts(n == 1)
 			case 'm':
-				d.SetRtsCts(n != 0)
+				err = d.SetRtsCts(n != 0)
 			case 'D':
 				updateCtlNow()
 				d.Delay(n)
 			case 'W':
 				updateCtlNow()
-				d.Write([]byte{byte(n)})
+				if err != nil {
+					break
+				}
+				_, err = d.Write([]byte{byte(n)})
 			case 'b':
-				d.SetBaudrate(n)
+				err = d.SetBaudrate(n)
 			case 'l':
-				d.SetWordlen(n)
+				err = d.SetWordlen(n)
 			case 'p':
-				d.SetParity(c)
+				err = d.SetParity(c)
 			case 's':
-				d.SetStopbits(n)
+				err = d.SetStopbits(n)
+			}
+			if err != nil {
+				return err
 			}
 		}
 	}
