@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
-	"bufio"
 	"io"
 	"log"
 	"net"
@@ -22,22 +22,23 @@ import (
 	"github.com/knieriem/serport"
 	"github.com/knieriem/serport/encoding"
 	"github.com/knieriem/serport/serenum"
-	"github.com/knieriem/text/rc"
 	"github.com/knieriem/text/cmdline"
+	"github.com/knieriem/text/rc"
 )
 
 var (
 	serveAddr = flag.String("serve", "", "serve device via 9P at a tcp `addr`, or (with `-') at stdin/out")
 
-	list       = flag.Bool("list", false, "list serial devices")
-	debug      = flag.Bool("9d", false, "print 9P debug messages")
-	debugall   = flag.Bool("9D", false, "print 9P packets as well as debug messages")
-	keepEcho   = flag.Bool("echo", false, "keep terminal's echo flag enabled")
-	keepLine   = flag.Bool("line", false, "keep terminal's line flag enabled")
-	crlfMode   = flag.Bool("crlf", false, "target needs CRLF line endings")
-	binaryMode = flag.Bool("binary", false, "force binary mode (no modifications) even when using terminal")
-	bridgePort = flag.String("bridge", "", "a serial `port` to copy data to and from")
-	cmdLine = flag.Bool("cmdline", false, "wrap cmdline package around the input")
+	list        = flag.Bool("list", false, "list serial devices")
+	debug       = flag.Bool("9d", false, "print 9P debug messages")
+	debugall    = flag.Bool("9D", false, "print 9P packets as well as debug messages")
+	keepEcho    = flag.Bool("echo", false, "keep terminal's echo flag enabled")
+	keepLine    = flag.Bool("line", false, "keep terminal's line flag enabled")
+	crlfMode    = flag.Bool("crlf", false, "target needs CRLF line endings")
+	binaryMode  = flag.Bool("binary", false, "force binary mode (no modifications) even when using terminal")
+	bridgePort  = flag.String("bridge", "", "a serial `port` to copy data to and from")
+	cmdLine     = flag.Bool("cmdline", false, "wrap cmdline package around the input")
+	enableTrace = flag.Bool("trace", false, "print traces")
 )
 
 type connOps struct {
@@ -111,21 +112,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		traceC = make(chan traceLine, 32)
-		go func() {
-			t0 := time.Now()
-			for m := range traceC {
-				ms := float64(m.Δt.Nanoseconds()) / 1000000
-				t := time.Now()
-				ms2 := float64(t.Sub(t0).Nanoseconds()) / 1000000
-				if ms > 999 {
-					fmt.Printf("-\t%06.2fms\t%s [%x]\n", ms2, m.prefix, m.buf)
-				} else {
-					fmt.Printf("%06.2fms\t%06.2fms\t%s [%x]\n", ms, ms2, m.prefix, m.buf)
-				}
-				t0 = t
-			}
-		}()
+		setupTrace()
 		go copyproc(port, port2, "<-")
 		go copyproc(port2, port, "->")
 	} else {
@@ -148,6 +135,7 @@ func main() {
 		case *binaryMode:
 		}
 
+		setupTrace()
 		if *cmdLine {
 			cl := cmdline.NewCmdLine(bufio.NewScanner(os.Stdin), map[string]cmdline.Cmd{})
 			cl.Prompt = "% "
@@ -167,9 +155,9 @@ func main() {
 				in = new(encoding.Wrapper).WrapReader(in, new(encoding.TermInput))
 			}
 
-			go copyproc(portRW, in, "")
+			go copyproc(portRW, in, "<-")
 		}
-		go copyproc(os.Stdout, portRW, "")
+		go copyproc(os.Stdout, portRW, "->")
 	}
 
 	sig := make(chan os.Signal, 1)
@@ -312,7 +300,9 @@ func copyproc(to io.Writer, from io.Reader, tracePrefix string) {
 		n   int
 	)
 	t0 := time.Now()
-
+	if !*enableTrace {
+		tracePrefix = ""
+	}
 	for {
 		if n, err = from.Read(buf); err != nil {
 			break
@@ -320,7 +310,9 @@ func copyproc(to io.Writer, from io.Reader, tracePrefix string) {
 		if n > 0 {
 			if tracePrefix != "" {
 				t := time.Now()
-				traceC <- traceLine{t.Sub(t0), tracePrefix, buf[:n]}
+				b := make([]byte, n)
+				copy(b, buf)
+				traceC <- traceLine{t.Sub(t0), tracePrefix, b}
 				t0 = t
 			}
 			if _, err = to.Write(buf[:n]); err != nil {
@@ -367,4 +359,26 @@ func newServer(dev serport.Port) (s *srv.Fsrv, err error) {
 		s.Debuglevel = 1
 	}
 	return
+}
+
+func setupTrace() {
+	if !*enableTrace {
+		return
+	}
+	traceC = make(chan traceLine, 32)
+	go func() {
+		t0 := time.Now()
+		for m := range traceC {
+			ms := float64(m.Δt.Nanoseconds()) / 1000000
+			t := time.Now()
+			ms2 := float64(t.Sub(t0).Nanoseconds()) / 1000000
+			if ms > 999 {
+				fmt.Fprintf(os.Stderr, "-\t%06.2fms\t%s [% x]\n", ms2, m.prefix, m.buf)
+			} else {
+				fmt.Fprintf(os.Stderr, "%06.2fms\t%06.2fms\t%s [% x]\n", ms, ms2, m.prefix, m.buf)
+			}
+			t0 = t
+		}
+	}()
+
 }
