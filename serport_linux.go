@@ -122,14 +122,13 @@ func (d *dev) Purge(in, out bool) {
 
 }
 
-func (d *dev) SetBaudrate(val int) (err error) {
-	if speed, ok := speedMap[val]; !ok {
-		err = d.errorf("open", "unsupported baud rate: %d", val)
-		return
-	} else {
-		d.t.SetInSpeed(speed)
-		d.t.SetOutSpeed(speed)
+func (d *dev) SetBaudrate(val int) error {
+	speed, ok := speedMap[val]
+	if !ok {
+		return d.errorf("open", "unsupported baud rate: %d", val)
 	}
+	d.t.SetInSpeed(speed)
+	d.t.SetOutSpeed(speed)
 	return d.updateCtl()
 }
 

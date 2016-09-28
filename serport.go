@@ -1,7 +1,6 @@
 package serport
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -117,7 +116,7 @@ func (p *dev) error(action string, err error) error {
 }
 
 func (p *dev) errorf(action string, format string, args ...interface{}) error {
-	err := errors.New(fmt.Sprintf(format, args...))
+	err := fmt.Errorf(format, args...)
 	return pathError(action, p.name, err)
 }
 
