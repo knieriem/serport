@@ -58,15 +58,20 @@ func (p *dev) Ctl(cmds ...string) error {
 			var n int
 			var c byte
 			var cmd byte
+			var err error
 
-			switch len(f) {
-			default:
-				n, _ = strconv.Atoi(f[1:])
-				c = f[1]
-				fallthrough
-			case 1:
-				cmd = f[0]
+			cmd = f[0]
+			if len(f) > 1 {
+				if cmd != 'p' {
+					n, err = strconv.Atoi(f[1:])
+					if err != nil {
+						return p.error("ctl", err)
+					}
+				} else {
+					c = f[1]
+				}
 			}
+
 			//fmt.Printf("Ctl: %c %d\n", cmd, n)
 			switch cmd {
 			case 'd':
