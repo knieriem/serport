@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -81,7 +82,11 @@ func choosePort(mode string) (name string, err error) {
 			return
 		}
 	}
-	t, err := terminal.Open()
+
+	if !terminal.IsTerminal(os.Stdin) {
+		return name, errors.New("os.Stdin is not connected to a terminal")
+	}
+	t, err := terminal.OpenOutput()
 	if err != nil {
 		return
 	}
@@ -89,7 +94,7 @@ func choosePort(mode string) (name string, err error) {
 
 	if len(list) == 0 {
 		fmt.Fprint(t, "Enter serial port: ")
-		_, err = fmt.Fscan(t, &name)
+		_, err = fmt.Scan(&name)
 		return
 	}
 	fmt.Fprintln(t, "\nChoose a serial port: ")
