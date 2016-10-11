@@ -1,4 +1,13 @@
-package serport
+/*
+Package serial9p makes serial ports accessible through the 9P protocol.
+A serport.Port may be exported as a 9P file server that should
+behave much like Plan 9's /dev/eia* serial line devices.
+Functions MountConn and OpenFSDev provide 9P client access.
+
+See http://plan9.bell-labs.com/magic/man2html/3/uart for details about
+the file system interface, and cmd/sercom for an example.
+*/
+package serial9p
 
 import (
 	"strings"
@@ -6,12 +15,14 @@ import (
 
 	"code.google.com/p/go9p/p"
 	"code.google.com/p/go9p/p/srv"
+
 	"github.com/knieriem/g/ioutil"
+	"github.com/knieriem/serport"
 )
 
 type ctl struct {
 	file
-	dev           Port
+	dev           serport.Port
 	dataUnblockch chan bool
 	record        bool
 	rlist         []string
@@ -19,7 +30,7 @@ type ctl struct {
 type data struct {
 	file
 	m         sync.Mutex
-	dev       Port
+	dev       serport.Port
 	rch       ioutil.RdChannels
 	fid       *srv.Fid
 	unblockch chan bool
@@ -103,7 +114,7 @@ func (d *data) Clunk(f *srv.FFid) error {
 
 // Link ctl and data files (that wrap a previously opened
 // serial port) into an existing 9P file tree `dir'.
-func RegisterFiles9P(dir *srv.File, dev Port, user p.User) (err error) {
+func RegisterFiles9P(dir *srv.File, dev serport.Port, user p.User) (err error) {
 	c := new(ctl)
 	c.dev = dev
 	err = c.Add(dir, "ctl", user, nil, 0666, c)

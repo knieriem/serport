@@ -1,15 +1,16 @@
-package serport
+package serial9p
 
 import (
 	"errors"
-
-	"code.google.com/p/go9p/p"
-	"code.google.com/p/go9p/p/clnt"
-	"github.com/knieriem/g/go9p/user"
 	"io"
 	"net"
 	"os"
 	"strconv"
+
+	"code.google.com/p/go9p/p"
+	"code.google.com/p/go9p/p/clnt"
+	"github.com/knieriem/g/go9p/user"
+	"github.com/knieriem/serport"
 )
 
 type dev9 struct {
@@ -19,12 +20,12 @@ type dev9 struct {
 
 // Mount a 9P server using a previously established connection,
 // and wrap ctl and data files of a remote serial device
-// into a Port.
+// into a serport.Port.
 // Basename is the a file name prefix or directory,
 // where the device is expected to be found. It can
 // be "", if ctl and data files live in the 9P servers
 // root directory
-func MountConn(conn net.Conn, basename string) (port Port, c *clnt.Clnt, err error) {
+func MountConn(conn net.Conn, basename string) (port serport.Port, c *clnt.Clnt, err error) {
 	c, err = clnt.MountConn(conn, "", user.Current())
 	if err != nil {
 		return
@@ -69,7 +70,7 @@ type fdev struct {
 // 9P service.
 // Devdir is the name of a directory, where the files
 // "ctl" and "data" are expected to be found.
-func OpenFsDev(devdir string) (port Port, err error) {
+func OpenFsDev(devdir string) (port serport.Port, err error) {
 	d := new(fdev)
 	if d.data, err = os.OpenFile(devdir+"/data", os.O_RDWR, 0); err == nil {
 		if d.ctl, err = os.OpenFile(devdir+"/ctl", os.O_RDWR, 0); err != nil {

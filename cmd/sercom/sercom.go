@@ -22,6 +22,7 @@ import (
 	"github.com/knieriem/serport"
 	"github.com/knieriem/serport/encoding"
 	"github.com/knieriem/serport/serenum"
+	"github.com/knieriem/serport/serial9p"
 	"github.com/knieriem/text/cmdline"
 	"github.com/knieriem/text/rc"
 )
@@ -234,7 +235,7 @@ skipDefaultBaudrate:
 			port, err = mountConn(c)
 		}
 	} else if fi, e := os.Stat(dev); e == nil && fi.IsDir() {
-		port, err = serport.OpenFsDev(dev)
+		port, err = serial9p.OpenFsDev(dev)
 	} else {
 		var name string
 		port, name, err = serport.Choose(dev, "")
@@ -324,7 +325,7 @@ func copyproc(to io.Writer, from io.Reader, tracePrefix string) {
 }
 
 func mountConn(c net.Conn) (port serport.Port, err error) {
-	port, clnt, err := serport.MountConn(c, "")
+	port, clnt, err := serial9p.MountConn(c, "")
 	if err == nil {
 		switch {
 		case *debugall:
@@ -345,7 +346,7 @@ func newServer(dev serport.Port) (s *srv.Fsrv, err error) {
 		return
 	}
 
-	err = serport.RegisterFiles9P(root, dev, user)
+	err = serial9p.RegisterFiles9P(root, dev, user)
 	if err != nil {
 		return
 	}

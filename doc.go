@@ -1,8 +1,6 @@
 /*
-Package serport provides access to local, and remote (9P served)
-serial ports on Linux and Windows. The Port interface is still
-incomplete -- basic access to serial ports works, but some
-functions might be missing.
+Package serport provides access to local serial ports on
+Linux and Windows.
 
 Besides a number of SetXY() methods that allow modification
 of single parameters, a method named Ctl() is available that
@@ -38,5 +36,6 @@ subset is supported:
 
 	}	Execute pending commands
 
+For remote access to serial ports, see sub-package serial9p.
 */
 package serport
