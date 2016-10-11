@@ -107,7 +107,7 @@ func choosePort(mode string) (name string, err error) {
 		fmt.Fprint(t, "\nEnter a number {(0)", sep, len(list)-1, "}: ")
 	}
 
-	s := bufio.NewScanner(t)
+	s := bufio.NewScanner(os.Stdin)
 	if !s.Scan() {
 		err = s.Err()
 		return
