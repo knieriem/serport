@@ -3,6 +3,7 @@ package serport
 import (
 	"io"
 	"os"
+	"sync"
 
 	"golang.org/x/sys/unix"
 
@@ -20,6 +21,9 @@ type hw struct {
 	t, tsav, tOrig sys.Termios
 	closing        bool
 	rdpoll         *epoll.Pollster
+	closeC         chan<- struct{}
+	sync.RWMutex
+	reading bool
 }
 
 // Open a local serial port.
@@ -86,8 +90,22 @@ fail:
 }
 
 func (p *dev) Read(buf []byte) (nread int, err error) {
+	p.Lock()
+	p.reading = true
+	p.Unlock()
+	defer func() {
+		p.Lock()
+		p.reading = false
+		p.Unlock()
+	}()
 	for {
-		if p.closing {
+		p.RLock()
+		closeC := p.closeC
+		p.RUnlock()
+		if closeC != nil {
+			var a struct{}
+			closeC <- a
+			close(closeC)
 			return 0, io.EOF
 		}
 		_, mode, err1 := p.rdpoll.WaitFD(250e6)
@@ -104,7 +122,15 @@ func (p *dev) Read(buf []byte) (nread int, err error) {
 }
 
 func (p *dev) Close() error {
-	p.closing = true
+	p.Lock()
+	if p.reading {
+		c := make(chan struct{})
+		p.closeC = c
+		p.Unlock()
+		<-c
+	} else {
+		p.Unlock()
+	}
 	p.rdpoll.Close()
 	sys.IoctlTermios(p.Fd(), sys.TCSETSW, &p.tOrig)
 	return p.hw.Close()
