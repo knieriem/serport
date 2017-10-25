@@ -70,7 +70,6 @@ func readDeviceInfo(name string) (port *PortInfo, ok bool) {
 
 	port = new(PortInfo)
 	port.Driver = filepath.Base(link)
-	drvPath = link
 
 	port.Device = "/dev/" + name
 	if _, err = os.Stat(port.Device); err != nil {
