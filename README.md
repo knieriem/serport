@@ -1,3 +1,6 @@
+[![GoDoc](https://godoc.org/github.com/knieriem/serport?status.svg)](https://godoc.org/github.com/knieriem/serport)
+[![GoReportCard](https://goreportcard.com/badge/github.com/knieriem/serport)](https://goreportcard.com/report/github.com/knieriem/serport)
+
 Serport is a Go package providing access to serial ports on Linux
 and Windows.  Its sub-package *serenum* helps finding serial ports on
 a system.
