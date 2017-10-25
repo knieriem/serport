@@ -28,7 +28,7 @@ subset is supported:
 
   Additional commands:
 
-	Dn	Delay exection for n milli-seconds
+	Dn	Delay execution for n milli-seconds
 
 	Wn	Write a byte with value n
 
