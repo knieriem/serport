@@ -73,7 +73,7 @@ func main() {
 	}
 
 	if terminal.IsTerminal(os.Stdout) {
-		fmt.Println("# Sercom v0.1")
+		fmt.Println("# Sercom v0.2")
 	}
 
 	devSpec := flag.Arg(0)
