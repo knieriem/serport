@@ -165,6 +165,10 @@ func (d *fdev) SetRtsCts(on bool) error {
 	return d.cmdbool('m', on)
 }
 
+func (d *fdev) SendBreak(ms int) error {
+	return d.cmdi('D', ms)
+}
+
 func (d *fdev) cmd(c string) (err error) {
 	_, err = d.ctl.Write([]byte(c))
 	return err

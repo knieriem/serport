@@ -14,6 +14,8 @@ subset is supported:
 
 	//f	Flush output queue.
 
+	kn	Send a break lasting n milliseconds.
+
 	ln	Set number of bits per byte to n. Legal values are 5,
 		6, 7, or 8.
 

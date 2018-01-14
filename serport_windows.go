@@ -279,6 +279,10 @@ func (d *dev) updateCtl() (err error) {
 	return
 }
 
+func (p *dev) SendBreak(ms int) error {
+	return p.errorf("send-break", "not implemented")
+}
+
 func (d *dev) ModemLines() LineState {
 	var ls LineState
 	// TBD

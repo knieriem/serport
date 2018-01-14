@@ -21,6 +21,8 @@ type Port interface {
 	SetRts(bool) error
 	SetRtsCts(bool) error // obey Cts signal, set Rts depending of internal buffer's state
 
+	SendBreak(ms int) error
+
 	Delay(ms int)
 
 	// If the Port is remote, after calling Record() the execution of
@@ -95,6 +97,8 @@ func (p *dev) Ctl(cmds ...string) error {
 				err = d.SetBaudrate(n)
 			case 'l':
 				err = d.SetWordlen(n)
+			case 'k':
+				err = d.SendBreak(n)
 			case 'p':
 				err = d.SetParity(c)
 			case 's':

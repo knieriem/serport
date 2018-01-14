@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"time"
 
 	"golang.org/x/sys/unix"
 
@@ -43,9 +44,8 @@ func Open(filename string, inictl string) (port Port, err error) {
 	t := &p.t
 
 	fd := file.Fd()
-	_, _, errno := unix.Syscall(unix.SYS_IOCTL, fd, unix.TIOCEXCL, 0)
-	if errno != 0 {
-		err = errno
+	err = plainIoctl(fd, unix.TIOCEXCL)
+	if err != nil {
 		goto fail
 	}
 	err = setBlocking(fd)
@@ -259,6 +259,16 @@ func (d *dev) updateCtl() (err error) {
 	return
 }
 
+func (p *dev) SendBreak(ms int) error {
+	fd := p.Fd()
+	if err := plainIoctl(fd, unix.TIOCSBRK); err != nil {
+		plainIoctl(fd, unix.TIOCCBRK)
+		return err
+	}
+	time.Sleep(time.Duration(ms) * time.Millisecond)
+	return plainIoctl(fd, unix.TIOCCBRK)
+}
+
 func (p *dev) ModemLines() LineState {
 	var ls LineState
 	return ls
@@ -305,4 +315,12 @@ func setBlocking(fd uintptr) (err error) {
 		_, err = sys.Fcntl(fd, unix.F_SETFL, flags&^unix.O_NONBLOCK)
 	}
 	return
+}
+
+func plainIoctl(fd, kind uintptr) error {
+	_, _, errno := unix.Syscall(unix.SYS_IOCTL, fd, kind, 0)
+	if errno != 0 {
+		return errno
+	}
+	return nil
 }
