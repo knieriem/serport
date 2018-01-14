@@ -108,7 +108,7 @@ func (d *dev) Read(buf []byte) (nread int, err error) {
 			close(closeC)
 			return 0, io.EOF
 		}
-		_, mode, err1 := d.rdpoll.WaitFD(250e6)
+		_, mode, err1 := d.rdpoll.WaitFD(100e6)
 		if err1 != nil {
 			err = err1
 			return
