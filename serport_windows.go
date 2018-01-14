@@ -1,11 +1,12 @@
 package serport
 
 import (
-	win "github.com/knieriem/g/syscall"
 	"io"
 	"path/filepath"
 	"sync"
 	"syscall"
+
+	win "github.com/knieriem/g/syscall"
 )
 
 const (
