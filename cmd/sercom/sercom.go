@@ -86,6 +86,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	var handleSmartInt func(<-chan os.Signal) bool
 	restoreTerminal := func() {}
 
 	if *serveAddr != "" {
@@ -154,6 +155,17 @@ func main() {
 			in := io.Reader(os.Stdin)
 			if !*binaryMode {
 				in = new(encoding.Wrapper).WrapReader(in, new(encoding.TermInput))
+				handleSmartInt = func(sig <-chan os.Signal) bool {
+					portRW.Write([]byte{0x03})
+					t := time.NewTimer(250 * time.Millisecond)
+					select {
+					case <-t.C:
+					case <-sig:
+						t.Stop()
+						return true
+					}
+					return false
+				}
 			}
 
 			go copyproc(portRW, in, "<-")
@@ -164,12 +176,18 @@ func main() {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig)
 
+waitEvent:
 	select {
 	case err = <-cherr:
 		if err != io.EOF {
 			log.Println(err)
 		}
 	case s := <-sig:
+		if s == os.Interrupt && handleSmartInt != nil {
+			if interrupted := handleSmartInt(sig); !interrupted {
+				goto waitEvent
+			}
+		}
 		log.Println(s)
 	}
 	port.Close()
