@@ -37,11 +37,11 @@ func Open(filename string, inictl string) (port Port, err error) {
 	if file, err = os.OpenFile(filename, os.O_RDWR|unix.O_NOCTTY|unix.O_NONBLOCK, 0); err != nil {
 		return
 	}
-	p := new(dev)
-	p.File = file
-	p.name = filename
-	p.encaps = p
-	t := &p.t
+	d := new(dev)
+	d.File = file
+	d.name = filename
+	d.encaps = d
+	t := &d.t
 
 	fd := file.Fd()
 	err = plainIoctl(fd, unix.TIOCEXCL)
@@ -50,16 +50,16 @@ func Open(filename string, inictl string) (port Port, err error) {
 	}
 	err = setBlocking(fd)
 	if err != nil {
-		err = p.error("set blocking", err)
+		err = d.error("set blocking", err)
 		goto fail
 	}
 
 	if err = sys.IoctlTermios(fd, sys.TCGETS, t); err != nil {
-		err = p.error("get term attr", err)
+		err = d.error("get term attr", err)
 		goto fail
 	}
-	p.tOrig = p.t
-	p.tsav = p.t
+	d.tOrig = d.t
+	d.tsav = d.t
 
 	t.Cflag |= sys.CLOCAL
 	t.Lflag &^= sys.ICANON | sys.ECHO | sys.ISIG | sys.IEXTEN
@@ -71,17 +71,17 @@ func Open(filename string, inictl string) (port Port, err error) {
 	t.Cc[sys.VMIN] = 1
 	t.Cc[sys.VTIME] = 0
 
-	if err = p.Ctl(initDefault, inictl); err != nil {
+	if err = d.Ctl(initDefault, inictl); err != nil {
 		goto fail
 	}
-	if p.rdpoll, err = epoll.NewPollster(); err != nil {
+	if d.rdpoll, err = epoll.NewPollster(); err != nil {
 		return
 	}
-	if p.rdpoll.AddFD(int(fd), 'r', true); err != nil {
+	if d.rdpoll.AddFD(int(fd), 'r', true); err != nil {
 		return
 	}
 
-	port = p
+	port = d
 	return
 
 fail:
@@ -89,26 +89,26 @@ fail:
 	return
 }
 
-func (p *dev) Read(buf []byte) (nread int, err error) {
-	p.Lock()
-	p.reading = true
-	p.Unlock()
+func (d *dev) Read(buf []byte) (nread int, err error) {
+	d.Lock()
+	d.reading = true
+	d.Unlock()
 	defer func() {
-		p.Lock()
-		p.reading = false
-		p.Unlock()
+		d.Lock()
+		d.reading = false
+		d.Unlock()
 	}()
 	for {
-		p.RLock()
-		closeC := p.closeC
-		p.RUnlock()
+		d.RLock()
+		closeC := d.closeC
+		d.RUnlock()
 		if closeC != nil {
 			var a struct{}
 			closeC <- a
 			close(closeC)
 			return 0, io.EOF
 		}
-		_, mode, err1 := p.rdpoll.WaitFD(250e6)
+		_, mode, err1 := d.rdpoll.WaitFD(250e6)
 		if err1 != nil {
 			err = err1
 			return
@@ -117,23 +117,23 @@ func (p *dev) Read(buf []byte) (nread int, err error) {
 			// WaitFD timeout
 			continue
 		}
-		return p.hw.Read(buf)
+		return d.hw.Read(buf)
 	}
 }
 
-func (p *dev) Close() error {
-	p.Lock()
-	if p.reading {
+func (d *dev) Close() error {
+	d.Lock()
+	if d.reading {
 		c := make(chan struct{})
-		p.closeC = c
-		p.Unlock()
+		d.closeC = c
+		d.Unlock()
 		<-c
 	} else {
-		p.Unlock()
+		d.Unlock()
 	}
-	p.rdpoll.Close()
-	sys.IoctlTermios(p.Fd(), sys.TCSETSW, &p.tOrig)
-	return p.hw.Close()
+	d.rdpoll.Close()
+	sys.IoctlTermios(d.Fd(), sys.TCSETSW, &d.tOrig)
+	return d.hw.Close()
 }
 
 func (d *dev) Drain() (err error) {
@@ -203,24 +203,24 @@ func (d *dev) SetStopbits(n int) (err error) {
 	return d.updateCtl()
 }
 
-func (p *dev) SetRts(on bool) error {
-	p.rts = on
+func (d *dev) SetRts(on bool) error {
+	d.rts = on
 	if on {
-		return p.commfn("set rts", sys.TIOCMBIS, sys.TIOCM_RTS)
+		return d.commfn("set rts", sys.TIOCMBIS, sys.TIOCM_RTS)
 	}
-	return p.commfn("clr rts", sys.TIOCMBIC, sys.TIOCM_RTS)
+	return d.commfn("clr rts", sys.TIOCMBIC, sys.TIOCM_RTS)
 }
-func (p *dev) SetDtr(on bool) error {
-	p.dtr = on
+func (d *dev) SetDtr(on bool) error {
+	d.dtr = on
 	if on {
-		return p.commfn("set dtr", sys.TIOCMBIS, sys.TIOCM_DTR)
+		return d.commfn("set dtr", sys.TIOCMBIS, sys.TIOCM_DTR)
 	}
-	return p.commfn("clr dtr", sys.TIOCMBIC, sys.TIOCM_DTR)
+	return d.commfn("clr dtr", sys.TIOCMBIC, sys.TIOCM_DTR)
 }
 
-func (p *dev) commfn(name string, cmd int, f sys.Int) (err error) {
-	if err = sys.IoctlModem(p.Fd(), cmd, &f); err != nil {
-		return p.error(name, err)
+func (d *dev) commfn(name string, cmd int, f sys.Int) (err error) {
+	if err = sys.IoctlModem(d.Fd(), cmd, &f); err != nil {
+		return d.error(name, err)
 	}
 	return
 }
@@ -259,8 +259,8 @@ func (d *dev) updateCtl() (err error) {
 	return
 }
 
-func (p *dev) SendBreak(ms int) error {
-	fd := p.Fd()
+func (d *dev) SendBreak(ms int) error {
+	fd := d.Fd()
 	if err := plainIoctl(fd, unix.TIOCSBRK); err != nil {
 		plainIoctl(fd, unix.TIOCCBRK)
 		return err
@@ -269,7 +269,7 @@ func (p *dev) SendBreak(ms int) error {
 	return plainIoctl(fd, unix.TIOCCBRK)
 }
 
-func (p *dev) ModemLines() LineState {
+func (d *dev) ModemLines() LineState {
 	var ls LineState
 	return ls
 }

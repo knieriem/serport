@@ -44,19 +44,19 @@ type dev struct {
 	encaps Port
 }
 
-func (p *dev) Ctl(cmds ...string) error {
+func (d *dev) Ctl(cmds ...string) error {
 	var err error
 	updateCtlNow := func() {
-		p.inCtl = false
-		err = p.updateCtl()
-		p.inCtl = true
+		d.inCtl = false
+		err = d.updateCtl()
+		d.inCtl = true
 	}
 
-	p.inCtl = true
+	d.inCtl = true
 	defer func() {
-		p.inCtl = false
+		d.inCtl = false
 	}()
-	d := p.encaps
+	p := d.encaps
 
 	for _, s := range cmds {
 		for _, f := range strings.Fields(s) {
@@ -69,7 +69,7 @@ func (p *dev) Ctl(cmds ...string) error {
 				if cmd != 'p' {
 					n, err = strconv.Atoi(f[1:])
 					if err != nil {
-						return p.error("ctl", err)
+						return d.error("ctl", err)
 					}
 				} else {
 					c = f[1]
@@ -79,38 +79,38 @@ func (p *dev) Ctl(cmds ...string) error {
 			//fmt.Printf("Ctl: %c %d\n", cmd, n)
 			switch cmd {
 			case 'd':
-				err = d.SetDtr(n == 1)
+				err = p.SetDtr(n == 1)
 			case 'r':
-				err = d.SetRts(n == 1)
+				err = p.SetRts(n == 1)
 			case 'm':
-				err = d.SetRtsCts(n != 0)
+				err = p.SetRtsCts(n != 0)
 			case 'D':
 				updateCtlNow()
-				d.Delay(n)
+				p.Delay(n)
 			case 'W':
 				updateCtlNow()
 				if err != nil {
 					break
 				}
-				_, err = d.Write([]byte{byte(n)})
+				_, err = p.Write([]byte{byte(n)})
 			case 'b':
-				err = d.SetBaudrate(n)
+				err = p.SetBaudrate(n)
 			case 'l':
-				err = d.SetWordlen(n)
+				err = p.SetWordlen(n)
 			case 'k':
-				err = d.SendBreak(n)
+				err = p.SendBreak(n)
 			case 'p':
-				err = d.SetParity(c)
+				err = p.SetParity(c)
 			case 's':
-				err = d.SetStopbits(n)
+				err = p.SetStopbits(n)
 			}
 			if err != nil {
 				return err
 			}
 		}
 	}
-	p.inCtl = false
-	return p.updateCtl()
+	d.inCtl = false
+	return d.updateCtl()
 }
 
 func (d *dev) Delay(ms int) {
@@ -124,13 +124,13 @@ func (d *dev) Record() {
 func (d *dev) Commit() {
 }
 
-func (p *dev) error(action string, err error) error {
-	return pathError(action, p.name, err)
+func (d *dev) error(action string, err error) error {
+	return pathError(action, d.name, err)
 }
 
-func (p *dev) errorf(action string, format string, args ...interface{}) error {
+func (d *dev) errorf(action string, format string, args ...interface{}) error {
 	err := fmt.Errorf(format, args...)
-	return pathError(action, p.name, err)
+	return pathError(action, d.name, err)
 }
 
 func pathError(op, path string, err error) error {
