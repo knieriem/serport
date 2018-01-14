@@ -4,15 +4,13 @@ Linux and Windows.
 
 Besides a number of SetXY() methods that allow modification
 of single parameters, a method named Ctl() is available that
-processes a string containing one or more commands as described
-in http://plan9.bell-labs.com/magic/man2html/3/uart.  Only a
-subset is supported:
+processes a string containing one or more commands as described in
+http://plan9.bell-labs.com/magic/man2html/3/uart.  The following subset
+is supported:
 
 	bn	Set the baud rate to n.
 
  	dn	Set DTR if n is non-zero; else clear it.
-
-	//f	Flush output queue.
 
 	kn	Send a break lasting n milliseconds.
 
