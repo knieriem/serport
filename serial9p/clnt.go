@@ -7,10 +7,10 @@ import (
 	"os"
 	"strconv"
 
-	"code.google.com/p/go9p/p"
-	"code.google.com/p/go9p/p/clnt"
 	"github.com/knieriem/g/go9p/user"
 	"github.com/knieriem/serport"
+	"github.com/lionkov/go9p/p"
+	"github.com/lionkov/go9p/p/clnt"
 )
 
 type dev9 struct {
@@ -26,7 +26,7 @@ type dev9 struct {
 // be "", if ctl and data files live in the 9P servers
 // root directory
 func MountConn(conn net.Conn, basename string) (port serport.Port, c *clnt.Clnt, err error) {
-	c, err = clnt.MountConn(conn, "", user.Current())
+	c, err = clnt.MountConn(conn, "", 8192, user.Current())
 	if err != nil {
 		return
 	}

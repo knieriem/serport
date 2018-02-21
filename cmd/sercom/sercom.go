@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"code.google.com/p/go9p/p"
-	"code.google.com/p/go9p/p/srv"
 	"github.com/knieriem/g/go9p"
 	"github.com/knieriem/g/go9p/user"
 	"github.com/knieriem/g/ioutil/terminal"
@@ -25,6 +23,8 @@ import (
 	"github.com/knieriem/serport/serial9p"
 	"github.com/knieriem/text/cmdline"
 	"github.com/knieriem/text/rc"
+	"github.com/lionkov/go9p/p"
+	"github.com/lionkov/go9p/p/srv"
 )
 
 var (
