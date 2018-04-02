@@ -103,6 +103,8 @@ func (d *dev) Ctl(cmds ...string) error {
 				err = p.SetParity(c)
 			case 's':
 				err = p.SetStopbits(n)
+			default:
+				err = d.errorf("ctl", "unknown command: %q", string(cmd))
 			}
 			if err != nil {
 				return err
