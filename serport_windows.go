@@ -289,3 +289,7 @@ func (d *dev) ModemLines() LineState {
 	// TBD
 	return ls
 }
+
+func (p *dev) SetLowLatency(bool) error {
+	return p.errorf("set-low-latency", "not implemented")
+}

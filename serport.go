@@ -21,6 +21,8 @@ type Port interface {
 	SetRts(bool) error
 	SetRtsCts(bool) error // obey Cts signal, set Rts depending of internal buffer's state
 
+	SetLowLatency(bool) error
+
 	SendBreak(ms int) error
 
 	Delay(ms int)
@@ -103,6 +105,8 @@ func (d *dev) Ctl(cmds ...string) error {
 				err = p.SetParity(c)
 			case 's':
 				err = p.SetStopbits(n)
+			case 'L':
+				err = p.SetLowLatency(n != 0)
 			default:
 				err = d.errorf("ctl", "unknown command: %q", string(cmd))
 			}

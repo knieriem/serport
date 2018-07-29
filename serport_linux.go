@@ -20,6 +20,7 @@ type hw struct {
 	*os.File
 	inCtl          bool
 	t, tsav, tOrig sys.Termios
+	sOrig          *sys.Serial
 	closing        bool
 	rdpoll         *epoll.Pollster
 	closeC         chan<- struct{}
@@ -133,6 +134,9 @@ func (d *dev) Close() error {
 	}
 	d.rdpoll.Close()
 	sys.IoctlTermios(d.Fd(), sys.TCSETSW, &d.tOrig)
+	if d.sOrig != nil {
+		sys.IoctlSerial(d.Fd(), unix.TIOCSSERIAL, d.sOrig)
+	}
 	return d.hw.Close()
 }
 
@@ -323,4 +327,24 @@ func plainIoctl(fd, kind uintptr) error {
 		return errno
 	}
 	return nil
+}
+
+func (d *dev) SetLowLatency(low bool) error {
+	d.Lock()
+	defer d.Unlock()
+
+	var ser sys.Serial
+	if err := sys.IoctlSerial(d.Fd(), unix.TIOCGSERIAL, &ser); err != nil {
+		return err
+	}
+	if d.sOrig == nil {
+		orig := ser
+		d.sOrig = &orig
+	}
+	if low {
+		ser.Flags |= sys.ASYNC_LOW_LATENCY
+	} else {
+		ser.Flags &= ^sys.ASYNC_LOW_LATENCY
+	}
+	return sys.IoctlSerial(d.Fd(), unix.TIOCSSERIAL, &ser)
 }
