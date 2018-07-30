@@ -154,6 +154,10 @@ func (d *fdev) SetStopbits(n int) (err error) {
 	return errors.New("invalid number of stopbits")
 }
 
+func (d *fdev) SetLowLatency(bool) error {
+	return errors.New("not implemented")
+}
+
 func (d *fdev) SetRts(on bool) error {
 	return d.cmdbool('r', on)
 }
