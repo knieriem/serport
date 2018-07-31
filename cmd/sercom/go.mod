@@ -7,4 +7,4 @@ require (
 	github.com/lionkov/go9p v0.0.0-20180620135904-0a603dd6808a
 )
 
-replace github.com/knieriem/serport@v0.1.2 => ../..
+replace github.com/knieriem/serport v0.1.2 => ../..
