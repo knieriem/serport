@@ -18,8 +18,9 @@ type hw struct {
 	sync.Mutex
 	closing bool
 
-	initDone    bool
-	dcb, dcbsav win.DCB
+	initDone     bool
+	dcb, dcbsav  win.DCB
+	rtsHandshake bool
 
 	ev struct {
 		w syscall.Handle
@@ -197,6 +198,12 @@ func (d *dev) SetStopbits(n int) error {
 
 func (d *dev) SetRts(on bool) (err error) {
 	d.rts = on
+	if d.rtsHandshake {
+		// Modifying RTS line state via EscapeCommFunction
+		// would result in an error "The parameter is incorrect",
+		// if RTS_CONTROL_HANDSHAKE is active
+		return
+	}
 	setRtsFlags(&d.dcb, on)
 	if !d.initDone {
 		return
@@ -239,6 +246,7 @@ func (d *dev) SetRtsCts(on bool) error {
 		dcb.Flags &^= win.DCBfOutxCtsFlow
 		setRtsFlags(dcb, d.rts)
 	}
+	d.rtsHandshake = on
 	return d.updateCtl()
 }
 
