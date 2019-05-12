@@ -12,10 +12,6 @@ import (
 	"github.com/knieriem/g/syscall/epoll"
 )
 
-const (
-	initDefault = "b115200 l8 pn r1 s1"
-)
-
 type hw struct {
 	*os.File
 	inCtl          bool
@@ -72,7 +68,7 @@ func Open(filename string, inictl string) (port Port, err error) {
 	t.Cc[sys.VMIN] = 1
 	t.Cc[sys.VTIME] = 0
 
-	if err = d.Ctl(initDefault, inictl); err != nil {
+	if err = d.Ctl(mergeWithDefault(inictl)); err != nil {
 		goto fail
 	}
 	if d.rdpoll, err = epoll.NewPollster(); err != nil {

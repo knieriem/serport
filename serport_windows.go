@@ -9,10 +9,6 @@ import (
 	win "github.com/knieriem/g/syscall"
 )
 
-const (
-	initDefault = "b115200 l8 pn r1 s1"
-)
-
 type hw struct {
 	fd syscall.Handle
 	sync.Mutex
@@ -57,7 +53,7 @@ try:
 	d.name = file
 	d.encaps = d
 
-	if err = d.Ctl(initDefault, inictl); err != nil {
+	if err = d.Ctl(mergeWithDefault(inictl)); err != nil {
 		return
 	}
 	d.initDone = true

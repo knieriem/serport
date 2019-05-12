@@ -46,6 +46,33 @@ type dev struct {
 	encaps Port
 }
 
+const (
+	initDefault = "b115200 l8 pn r1 s1"
+)
+
+func mergeWithDefault(cmds string) string {
+	fi := strings.Fields(initDefault)
+	f := strings.Fields(cmds)
+	r := make([]string, 0, len(fi))
+L:
+	for _, ci := range fi {
+		if ci == "" {
+			continue
+		}
+		for _, c := range f {
+			if c[0] == 'D' || c[0] == 'W' {
+				break
+			}
+			if c[0] == ci[0] {
+				continue L // exclude c from resulting string
+			}
+		}
+		r = append(r, ci)
+	}
+
+	return strings.Join(r, " ") + " " + cmds
+}
+
 func (d *dev) Ctl(cmds ...string) error {
 	var err error
 	updateCtlNow := func() {
