@@ -10,8 +10,6 @@ import (
 )
 
 type Port interface {
-	Ctl(cmds ...string) error // accepts commands similar to Plan 9's eia#ctl
-
 	SetBaudrate(int) error
 	SetParity(byte) error  // odd: 'o', even: 'e', otherwise none
 	SetWordlen(int) error  // 5, 6, 7, or 8
@@ -34,6 +32,12 @@ type Port interface {
 
 	Drain() error
 	Purge(in, out bool)
+
+	Device
+}
+
+type Device interface {
+	Ctl(cmds ...string) error // accepts commands similar to Plan 9's eia#ctl
 
 	io.ReadWriteCloser
 }
