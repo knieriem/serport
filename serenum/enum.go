@@ -47,6 +47,7 @@ const StdFormat = `
 	{{- with .Enumerator}}
 		{{- if not (contains $d .)}}{{.}}: {{end}}
 	{{- end}}{{$d}}
+	{{- with .Manufacturer}} ({{.}}){{end}}
 	{{- if .Driver}}, {{end}}
 {{- end}}
 
