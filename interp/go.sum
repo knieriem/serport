@@ -1,0 +1,13 @@
+github.com/knieriem/g v0.1.1/go.mod h1:Cxrkopw+HrVRIxTQzwKvLf0zImHa1q6L0RUElAh3a9k=
+github.com/knieriem/g v0.1.2 h1:rsuzp2xAM3d3zkIkDPS9gV7G/60i30439bcNc3Nicsw=
+github.com/knieriem/g v0.1.2/go.mod h1:zYg1CmnYJBZ34OwOIRIqoBsvVxbGRjgE4kLQrHz7DBg=
+github.com/knieriem/serport v0.2.0 h1:5BIdwJ+zhNiaixUb87ny0d4AjSWH2nwZUEcgaOXNDAM=
+github.com/knieriem/serport v0.2.0/go.mod h1:RDA6f7Ja0aTeLlYhmfE86dpRDn6+9K5bsz17lHjjgvc=
+github.com/knieriem/text v0.6.0 h1:1YI8tcCBV8g8udYN1n17kx8fPPxNEFRhI2GUjIvG8Lc=
+github.com/knieriem/text v0.6.0/go.mod h1:nFN1r4dWMNr3tq/iqPWvNubGBcVSV41vH7D5lF0FzUs=
+github.com/knieriem/vfsutil v0.2.0/go.mod h1:Qjc1UuM923HYETrt+FcEyYZU72+xiR3Ilu37BfzSTFs=
+github.com/lionkov/go9p v0.0.0-20180620135904-0a603dd6808a/go.mod h1:Nbrxd4FljESFB/bUvzT5xm1VNO2VfzMKSIv4L++4J4U=
+golang.org/x/sys v0.0.0-20180727230415-bd9dbc187b6e/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20180824143301-4910a1d54f87 h1:GqwDwfvIpC33dK9bA1fD+JiDUNsuAiQiEkpHqUKze4o=
+golang.org/x/sys v0.0.0-20180824143301-4910a1d54f87/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/tools v0.0.0-20180824175216-6c1c5e93cdc1/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
