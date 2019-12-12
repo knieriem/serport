@@ -28,7 +28,8 @@ import (
 )
 
 var (
-	serveAddr = flag.String("serve", "", "serve device via 9P at a tcp `addr`, or (with `-') at stdin/out")
+	serveAddrTCP = flag.String("serve", "", "serve device stream via TCP at `addr`")
+	serveAddr    = flag.String("serve9P", "", "serve device via 9P at a tcp `addr`, or (with `-') at stdin/out")
 
 	list        = flag.Bool("list", false, "list serial devices")
 	debug       = flag.Bool("9d", false, "print 9P debug messages")
@@ -89,7 +90,21 @@ func main() {
 	var handleSmartInt func(<-chan os.Signal) bool
 	restoreTerminal := func() {}
 
-	if *serveAddr != "" {
+	if *serveAddrTCP != "" {
+		l, err := net.Listen("tcp", *serveAddrTCP)
+		if err != nil {
+			log.Fatal(err)
+		}
+		setupTrace()
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				continue
+			}
+			go copyproc(conn, port, "<-")
+			copyproc(port, conn, "->")
+		}
+	} else if *serveAddr != "" {
 		s, err := newServer(port)
 		if err != nil {
 			log.Fatal(err)
