@@ -2,7 +2,8 @@ package serport
 
 import (
 	"io"
-	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -33,8 +34,12 @@ func Open(file string, inictl string) (p Port, err error) {
 	)
 
 	// make sure COM interfaces with numbers >9 get prefixed properly
-	if match, _ := filepath.Match("[cC][oO][mM]1[0-9]", file); match {
-		file = `\\.\` + file
+	if u := strings.ToUpper(file); strings.HasPrefix(u, "COM") {
+		if i, err := strconv.ParseUint(u[3:], 10, 32); err == nil {
+			if i >= 1 {
+				file = `\\.\` + u
+			}
+		}
 	}
 
 	fd, e := syscall.CreateFile(syscall.StringToUTF16Ptr(file), access, sharemode, nil, createmode, flags, 0)
