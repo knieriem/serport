@@ -1,6 +1,6 @@
-github.com/knieriem/g v0.1.1 h1:is3tzbmMowECdGO6pfaiWHw3Pb8X+eweyq6Q8x7x29M=
-github.com/knieriem/g v0.1.1/go.mod h1:Cxrkopw+HrVRIxTQzwKvLf0zImHa1q6L0RUElAh3a9k=
+github.com/knieriem/g v0.2.0-beta1 h1:GbSRZJh9zDCkOtCJhSEvMf69kp3bwhQnsPisCuS25UQ=
+github.com/knieriem/g v0.2.0-beta1/go.mod h1:Z8Ze1gEpwzzniI/U9oaFsuyjRW26UToqDP5cFrcIoKI=
 github.com/lionkov/go9p v0.0.0-20180620135904-0a603dd6808a h1:5dYGzewut3Sp6+B7QFKioGh9+BovMF02FLDWja1Qbzo=
 github.com/lionkov/go9p v0.0.0-20180620135904-0a603dd6808a/go.mod h1:Nbrxd4FljESFB/bUvzT5xm1VNO2VfzMKSIv4L++4J4U=
-golang.org/x/sys v0.0.0-20180727230415-bd9dbc187b6e h1:3dQ4fR8k5KugjVKO0oqSd1odxuk2yaE2CIfxWP2WarQ=
-golang.org/x/sys v0.0.0-20180727230415-bd9dbc187b6e/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20210412220455-f1c623a9e750 h1:ZBu6861dZq7xBnG1bn5SRU0vA8nx42at4+kP07FMTog=
+golang.org/x/sys v0.0.0-20210412220455-f1c623a9e750/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
