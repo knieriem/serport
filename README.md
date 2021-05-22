@@ -37,4 +37,4 @@ to select one. If there is only one serial port present on a system,
 For a more complex example, see `cmd/sercom`.
 
 For the syntax of control strings (for configuring baudrate, line control,
-...) see [uart(3)](http://plan9.bell-labs.com/magic/man2html/3/uart).
+...) see [uart(3)](https://plan9.io/magic/man2html/3/uart).

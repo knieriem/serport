@@ -5,7 +5,7 @@ Linux and Windows.
 Besides a number of SetXY() methods that allow modification
 of single parameters, a method named Ctl() is available that
 processes a string containing one or more commands as described in
-http://plan9.bell-labs.com/magic/man2html/3/uart.  The following subset
+https://plan9.io/magic/man2html/3/uart.  The following subset
 is supported:
 
 	bn	Set the baud rate to n.

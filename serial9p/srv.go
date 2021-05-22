@@ -4,7 +4,7 @@ A serport.Port may be exported as a 9P file server that should
 behave much like Plan 9's /dev/eia* serial line devices.
 Functions MountConn and OpenFSDev provide 9P client access.
 
-See http://plan9.bell-labs.com/magic/man2html/3/uart for details about
+See https://plan9.io/magic/man2html/3/uart for details about
 the file system interface, and cmd/sercom for an example.
 */
 package serial9p
