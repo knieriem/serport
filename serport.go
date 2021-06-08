@@ -77,77 +77,150 @@ L:
 	return strings.Join(r, " ") + " " + cmds
 }
 
+var ctlNamespaceMap = map[string]*ctlNamespace{
+	"std": stdNamespace,
+}
+
+type ctlNamespace struct {
+	runCmd    ctlRunFunc
+	updateDrv func(*dev) error
+	charCmds  string
+}
+
+type ctlRunFunc func(d *dev, cmd, c byte, n int) error
+
 func (d *dev) Ctl(cmds ...string) error {
 	var err error
-	updateCtlNow := func() {
-		d.inCtl = false
-		err = d.updateCtl()
-		d.inCtl = true
-	}
 
 	d.inCtl = true
 	defer func() {
 		d.inCtl = false
 	}()
-	p := d.encaps
 
+	subNsID := ""
+	nsStd := ctlNamespaceMap["std"]
+	ns := nsStd
 	for _, s := range cmds {
 		for _, f := range strings.Fields(s) {
 			var n int
 			var c byte
-			var cmd byte
 
-			cmd = f[0]
+			cmd := f[0]
 			if len(f) > 1 {
-				if cmd != 'p' {
-					n, err = strconv.Atoi(f[1:])
+				arg := f[1:]
+				if cmd == '.' {
+					if arg[0] == '.' {
+						if subNsID == "" {
+							return d.errorf("ctl", "found \"..\", but sub-namespace not active")
+						}
+						arg = arg[1:]
+					} else if iDot := strings.IndexByte(arg, '.'); iDot == -1 {
+						return d.errorf("ctl", "missing dot after namespace id")
+					} else {
+						id := arg[:iDot]
+						arg = arg[iDot+1:]
+						if subNsID != id {
+							if subNsID != "" {
+								err = ns.updateDrv(d)
+								if err != nil {
+									return err
+								}
+							}
+							nsNew, ok := ctlNamespaceMap[id]
+							if !ok {
+								return d.errorf("ctl", "namespace not implemented: %q", id)
+							}
+							ns = nsNew
+							subNsID = id
+						}
+					}
+					if len(arg) == 0 {
+						return d.errorf("ctl", "command missing, found: %q", f)
+					}
+					cmd = arg[0]
+					arg = arg[1:]
+				} else if subNsID != "" {
+					err = ns.updateDrv(d)
+					if err != nil {
+						return err
+					}
+					subNsID = ""
+					ns = nsStd
+				}
+				if strings.IndexByte(ns.charCmds, cmd) == -1 {
+					n, err = strconv.Atoi(arg)
 					if err != nil {
 						return d.error("ctl", err)
 					}
 				} else {
-					c = f[1]
+					c = arg[0]
 				}
 			}
-
-			//fmt.Printf("Ctl: %c %d\n", cmd, n)
-			switch cmd {
-			case 'd':
-				err = p.SetDtr(n == 1)
-			case 'r':
-				err = p.SetRts(n == 1)
-			case 'm':
-				err = p.SetRtsCts(n != 0)
-			case 'D':
-				updateCtlNow()
-				p.Delay(n)
-			case 'W':
-				updateCtlNow()
-				if err != nil {
-					break
-				}
-				_, err = p.Write([]byte{byte(n)})
-			case 'b':
-				err = p.SetBaudrate(n)
-			case 'l':
-				err = p.SetWordlen(n)
-			case 'k':
-				err = p.SendBreak(n)
-			case 'p':
-				err = p.SetParity(c)
-			case 's':
-				err = p.SetStopbits(n)
-			case 'L':
-				err = p.SetLowLatency(n != 0)
-			default:
-				err = d.errorf("ctl", "unknown command: %q", string(cmd))
-			}
+			err := ns.runCmd(d, cmd, c, n)
 			if err != nil {
 				return err
 			}
 		}
 	}
+	if subNsID != "" {
+		err = ns.updateDrv(d)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.inCtl = false
 	return d.updateCtl()
+}
+
+func (d *dev) updateCtlNow() error {
+	saved := d.inCtl
+	d.inCtl = false
+	defer func() { d.inCtl = saved }()
+	return d.updateCtl()
+}
+
+var stdNamespace = &ctlNamespace{
+	runCmd: func(d *dev, cmd, c byte, n int) error {
+		p := d.encaps
+		switch cmd {
+		case 'd':
+			return p.SetDtr(n == 1)
+		case 'r':
+			return p.SetRts(n == 1)
+		case 'm':
+			return p.SetRtsCts(n != 0)
+		case 'D':
+			err := d.updateCtlNow()
+			if err != nil {
+				return err
+			}
+			p.Delay(n)
+			return nil
+		case 'W':
+			err := d.updateCtlNow()
+			if err != nil {
+				return err
+			}
+			_, err = p.Write([]byte{byte(n)})
+			return err
+		case 'b':
+			return p.SetBaudrate(n)
+		case 'l':
+			return p.SetWordlen(n)
+		case 'k':
+			return p.SendBreak(n)
+		case 'p':
+			return p.SetParity(c)
+		case 's':
+			return p.SetStopbits(n)
+		case 'L':
+			return p.SetLowLatency(n != 0)
+		default:
+			return d.errorf("ctl", "unknown command: %q", string(cmd))
+		}
+	},
+	charCmds: "p",
 }
 
 func (d *dev) Delay(ms int) {

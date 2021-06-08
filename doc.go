@@ -36,6 +36,35 @@ is supported:
 
 	}	Execute pending commands
 
+When using RS-485 transceivers, additional commands can
+be used to configure Linux' serial_rs485 struct.
+The commands have been assigned to a separate namespace;
+an extended command syntax exists to call commands of a specific namespace:
+
+	extended_command = [ "." [ namespace_id ] "." ] command_char arg
+
+The namespace_id is "rs485", and it may be ommitted if specified previously.
+Example:
+
+	.rs485.s1  ..[0 ..]1 ..a0 ..e0
+
+RS-485 specific commands:
+
+	sn	Set logical level of RTS when sending.
+
+	an	Set logical level of RTS after sending.
+
+	[n	After adjusting RTS, delay send by n milliseconds.
+
+	]n	After sending, delay RTS adjustment by n milliseconds.
+
+	en	Receive during transmission (local echo).
+
+	tn	Enable bus termination (if supported).
+
+See https://www.kernel.org/doc/Documentation/serial/serial-rs485.txt
+for details on the corresponding flags and fields of struct serial_rs485.
+
 For remote access to serial ports, see sub-package serial9p.
 */
 package serport

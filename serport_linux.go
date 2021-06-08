@@ -1,6 +1,7 @@
 package serport
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -17,7 +18,8 @@ type hw struct {
 	inCtl       bool
 	t           *unix.Termios
 	tsav, tOrig unix.Termios
-	sOrig       *sys.Serial
+	serOrig     *sys.Serial
+	rs485       rs485State
 	closing     bool
 	rdpoll      *epoll.Pollster
 	closeC      chan<- struct{}
@@ -132,8 +134,9 @@ func (d *dev) Close() error {
 	}
 	d.rdpoll.Close()
 	unix.IoctlSetTermios(d.fd(), unix.TCSETSW, &d.tOrig)
-	if d.sOrig != nil {
-		sys.IoctlSerial(d.Fd(), unix.TIOCSSERIAL, d.sOrig)
+	d.rs485.restore(d.fd())
+	if d.serOrig != nil {
+		sys.IoctlSetSerial(d.fd(), d.serOrig)
 	}
 	return d.hw.Close()
 }
@@ -327,20 +330,98 @@ func (d *dev) SetLowLatency(low bool) error {
 	d.Lock()
 	defer d.Unlock()
 
-	var ser sys.Serial
-	if err := sys.IoctlSerial(d.Fd(), unix.TIOCGSERIAL, &ser); err != nil {
+	ser, err := sys.IoctlGetSerial(d.fd())
+	if err != nil {
 		return err
 	}
-	if d.sOrig == nil {
-		orig := ser
-		d.sOrig = &orig
+	if d.serOrig == nil {
+		orig := *ser
+		d.serOrig = &orig
 	}
 	if low {
 		ser.Flags |= sys.ASYNC_LOW_LATENCY
 	} else {
 		ser.Flags &= ^sys.ASYNC_LOW_LATENCY
 	}
-	return sys.IoctlSerial(d.Fd(), unix.TIOCSSERIAL, &ser)
+	return sys.IoctlSetSerial(d.fd(), ser)
+}
+
+func init() {
+	ctlNamespaceMap["rs485"] = rs485CtlNamespace
+}
+
+var rs485CtlNamespace = &ctlNamespace{
+	runCmd: func(d *dev, cmd, c byte, n int) error {
+		st := &d.rs485
+		err := st.initlazy(d.fd())
+		if err != nil {
+			return fmt.Errorf("rs485: %w", err)
+		}
+		switch cmd {
+		case 's':
+			st.setFlag(sys.SER_RS485_RTS_ON_SEND, n)
+		case 'a':
+			st.setFlag(sys.SER_RS485_RTS_AFTER_SEND, n)
+		case '[':
+			st.cur.Rts_before_send = uint32(n)
+		case ']':
+			st.cur.Rts_after_send = uint32(n)
+		case 't':
+			st.setFlag(sys.SER_RS485_TERMINATE_BUS, n)
+		case 'e':
+			st.setFlag(sys.SER_RS485_RX_DURING_TX, n)
+		default:
+			return d.errorf("ctl", "rs485: unknown command: %q", string(cmd))
+		}
+		return nil
+	},
+	updateDrv: func(d *dev) error {
+		err := d.rs485.set(d.fd())
+		if err != nil {
+			return fmt.Errorf("rs485: %w", err)
+		}
+		return nil
+	},
+}
+
+type rs485State struct {
+	cur  *sys.SerialRS485
+	sav  sys.SerialRS485
+	orig *sys.SerialRS485
+}
+
+func (st *rs485State) initlazy(fd int) error {
+	if st.orig != nil {
+		return nil
+	}
+	rs485, err := sys.IoctlGetSerialRS485(fd)
+	if err != nil {
+		return err
+	}
+	orig := *rs485
+	st.orig = &orig
+	st.cur = rs485
+	rs485.Flags |= sys.SER_RS485_ENABLED
+	return nil
+}
+
+func (st *rs485State) set(fd int) error {
+	return sys.IoctlSetSerialRS485(fd, st.cur)
+}
+
+func (st *rs485State) setFlag(flag uint32, n int) {
+	if n != 0 {
+		st.cur.Flags |= flag
+	} else {
+		st.cur.Flags &^= flag
+	}
+}
+
+func (st *rs485State) restore(fd int) error {
+	if st.orig == nil {
+		return nil
+	}
+	return sys.IoctlSetSerialRS485(fd, st.orig)
 }
 
 func (d *dev) fd() int {
