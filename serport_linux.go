@@ -341,7 +341,7 @@ func (d *dev) SetLowLatency(low bool) error {
 	if low {
 		ser.Flags |= sys.ASYNC_LOW_LATENCY
 	} else {
-		ser.Flags &= ^sys.ASYNC_LOW_LATENCY
+		ser.Flags &^= sys.ASYNC_LOW_LATENCY
 	}
 	return sys.IoctlSetSerial(d.fd(), ser)
 }
