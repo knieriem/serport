@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -32,8 +33,8 @@ var (
 	serveAddr    = flag.String("serve9P", "", "serve device via 9P at a tcp `addr`, or (with `-') at stdin/out")
 
 	list        = flag.Bool("list", false, "list serial devices")
-	debug       = flag.Bool("9d", false, "print 9P debug messages")
-	debugall    = flag.Bool("9D", false, "print 9P packets as well as debug messages")
+	debug9P     = flag.Bool("9d", false, "print 9P debug messages")
+	debugall9P  = flag.Bool("9D", false, "print 9P packets as well as debug messages")
 	keepEcho    = flag.Bool("echo", false, "keep terminal's echo flag enabled")
 	keepLine    = flag.Bool("line", false, "keep terminal's line flag enabled")
 	crlfMode    = flag.Bool("crlf", false, "target needs CRLF line endings")
@@ -56,6 +57,8 @@ type traceLine struct {
 
 var traceC chan traceLine
 
+var ldVersion string
+
 func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "usage: %s [DEVICE]\n\n", os.Args[0])
@@ -74,7 +77,15 @@ func main() {
 	}
 
 	if terminal.IsTerminal(os.Stdout) {
-		fmt.Println("# Sercom v0.2")
+		bi, hasBuildInfo := debug.ReadBuildInfo()
+		mainVersion := "(unknown)"
+		switch {
+		case ldVersion != "":
+			mainVersion = ldVersion
+		case hasBuildInfo:
+			mainVersion = bi.Main.Version
+		}
+		fmt.Println("# Sercom", mainVersion)
 	}
 
 	devSpec := flag.Arg(0)
@@ -361,9 +372,9 @@ func mountConn(c net.Conn) (port serport.Port, err error) {
 	port, clnt, err := serial9p.MountConn(c, "")
 	if err == nil {
 		switch {
-		case *debugall:
+		case *debugall9P:
 			clnt.Debuglevel = 2
-		case *debug:
+		case *debug9P:
 			clnt.Debuglevel = 1
 
 		}
@@ -387,9 +398,9 @@ func newServer(dev serport.Port) (s *srv.Fsrv, err error) {
 	s = srv.NewFileSrv(root)
 
 	switch {
-	case *debugall:
+	case *debugall9P:
 		s.Debuglevel = 2
-	case *debug:
+	case *debug9P:
 		s.Debuglevel = 1
 	}
 	return
