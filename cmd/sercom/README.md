@@ -33,12 +33,19 @@ The list of serial ports is sorted in the following order:
 -	ACM devices
 -	other serial devices
 
+### Control commands
+
 Control commands, based on Plan 9 _uart_`s serial communication control,
 may be specified as a comma separated list,
 to configure the baud rate and other serial settings.
 See [serport's documentation][doc] for details.
 Note that in case DEVICE is omitted,
 a leading comma has to be present if control commands are specified.
+
+If no control commands are specified,
+the default is `,b115200,l8,pn,s1,r1`:
+115200 bit/s, 8N1, RTS set active.
+
 
 [doc]: https://pkg.go.dev/github.com/knieriem/serport#pkg-overview
 
