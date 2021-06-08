@@ -26,7 +26,10 @@ is supported:
 
 	sn	Set number of stop bits to n. Legal values are 1 or 2.
 
-  Additional commands:
+Additional commands, that haven't been present in Plan 9:
+
+	Ln	Low latency mode (available on Linux when using
+		drivers that support ASYNC_LOW_LATENCY)
 
 	Dn	Delay execution for n milli-seconds
 
