@@ -51,30 +51,61 @@ type dev struct {
 }
 
 const (
-	initDefault = "b115200 l8 pn r1 s1"
+	// StdConf specifies a port configuration that may be used
+	// as inictl argument to [Open].
+	StdConf = "b115200 l8 pn r1 s1"
 )
 
-func mergeWithDefault(cmds string) string {
-	fi := strings.Fields(initDefault)
-	f := strings.Fields(cmds)
+// MergeCtlCmds concatenates control cmd strings, skipping commands
+// from preceding strings if they occur, possibly with different arguments,
+// in subsequent strings too.
+func MergeCtlCmds(ctlCmds ...string) string {
+	switch len(ctlCmds) {
+	case 0:
+		return ""
+	case 1:
+		return mergeCtlCmds(StdConf, ctlCmds[0])
+	}
+	cmds := ctlCmds[0]
+	for _, cmds2 := range ctlCmds[1:] {
+		cmds = mergeCtlCmds(cmds, cmds2)
+	}
+	return cmds
+}
+
+func mergeCtlCmds(cmds1, cmds2 string) string {
+	fi := strings.Fields(cmds1)
+	f := strings.Fields(cmds2)
 	r := make([]string, 0, len(fi))
-L:
+
 	for _, ci := range fi {
 		if ci == "" {
 			continue
 		}
-		for _, c := range f {
+		for i, c := range f {
+			if c == "" {
+				continue
+			}
 			if c[0] == 'D' || c[0] == 'W' {
 				break
 			}
 			if c[0] == ci[0] {
-				continue L // exclude c from resulting string
+				ci = c
+				f[i] = ""
 			}
 		}
 		r = append(r, ci)
 	}
 
-	return strings.Join(r, " ") + " " + cmds
+	fOrig, f := f, f[:0]
+	for _, c := range fOrig {
+		if c == "" {
+			continue
+		}
+		f = append(f, c)
+	}
+	r = append(r, f...)
+	return strings.Join(r, " ")
 }
 
 var ctlNamespaceMap = map[string]*ctlNamespace{
@@ -92,7 +123,6 @@ type ctlRunFunc func(d *dev, cmd, c byte, n int) error
 func (d *dev) Ctl(cmds ...string) error {
 	var err error
 
-	d.inCtl = true
 	defer func() {
 		d.inCtl = false
 	}()
@@ -105,6 +135,7 @@ func (d *dev) Ctl(cmds ...string) error {
 			var n int
 			var c byte
 
+			d.inCtl = true
 			cmd := f[0]
 			if len(f) > 1 {
 				arg := f[1:]
@@ -169,6 +200,9 @@ func (d *dev) Ctl(cmds ...string) error {
 		}
 	}
 
+	if !d.inCtl {
+		return nil
+	}
 	d.inCtl = false
 	return d.updateCtl()
 }

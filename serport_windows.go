@@ -59,7 +59,7 @@ try:
 	d.name = file
 	d.encaps = d
 
-	if err = d.Ctl(mergeWithDefault(inictl)); err != nil {
+	if err = d.Ctl(inictl); err != nil {
 		return
 	}
 	d.initDone = true

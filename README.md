@@ -22,7 +22,8 @@ to select one. If there is only one serial port present on a system,
 	)
 	
 	func main() {
-		port, name, err := serport.Choose("", "b115200 m1")
+		conf := serport.MergeCtlCmds(serport.StdConf, "b115200 m1")
+		port, name, err := serport.Choose("", conf)
 		if err != nil {
 			log.Fatal(err)
 		}

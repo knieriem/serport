@@ -72,7 +72,7 @@ func Open(filename string, inictl string) (port Port, err error) {
 	t.Cc[unix.VMIN] = 1
 	t.Cc[unix.VTIME] = 0
 
-	if err = d.Ctl(mergeWithDefault(inictl)); err != nil {
+	if err = d.Ctl(inictl); err != nil {
 		goto fail
 	}
 	if d.rdpoll, err = epoll.NewPollster(); err != nil {

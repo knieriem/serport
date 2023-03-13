@@ -250,16 +250,9 @@ func openport(portSpec string) (port serport.Port, err error) {
 
 	f := strings.Split(portSpec, ",")
 	dev := f[0]
-	args := f[1:]
+	confArgs := f[1:]
 
-	for _, a := range args {
-		if strings.HasPrefix(a, "b") {
-			goto skipDefaultBaudrate
-		}
-	}
-
-	args = append([]string{defaultBaudrate}, args...)
-skipDefaultBaudrate:
+	conf := serport.MergeCtlCmds(serport.StdConf, defaultBaudrate, strings.Join(confArgs, " "))
 	addr := dev
 	details := ""
 
@@ -288,18 +281,15 @@ skipDefaultBaudrate:
 		addr = name
 		details = serenum.Lookup(name).Format(nil)
 	}
-
-	if len(args) != 0 {
-		addr += "," + strings.Join(args, ",")
+	if conf != "" {
+		addr += "," + strings.Replace(conf, " ", ",", -1)
 	}
 	if err != nil {
 		return
 	}
-	if len(args) != 0 {
-		err = port.Ctl(strings.Join(args, " "))
-		if err != nil {
-			return
-		}
+	err = port.Ctl(conf)
+	if err != nil {
+		return
 	}
 	fmt.Fprintln(os.Stderr, "# active device:", addr)
 	if details != "" {
