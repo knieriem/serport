@@ -10,7 +10,7 @@ is supported:
 
 	bn	Set the baud rate to n.
 
- 	dn	Set DTR if n is non-zero; else clear it.
+	dn	Set DTR if n is non-zero; else clear it.
 
 	kn	Send a break lasting n milliseconds.
 
