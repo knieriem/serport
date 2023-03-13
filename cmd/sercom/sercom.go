@@ -166,12 +166,11 @@ func main() {
 
 		setupTrace()
 		if *cmdLine {
-			cl := interp.NewCmdInterp(bufio.NewScanner(os.Stdin), serial.NewCmdMap(port, nil))
+			cl := interp.NewCmdInterp(bufio.NewScanner(os.Stdin), serial.NewCmdMap(port, nil),
+				interp.WithStdout(os.Stdout),
+				interp.WithStderr(os.Stdout),
+			)
 			cl.Prompt = "% "
-			cl.Stdout = os.Stdout
-			cl.Errf = func(format string, args ...interface{}) {
-				fmt.Printf(format, args...)
-			}
 			cl.Forward = portRW
 			go func() {
 				cherr <- cl.Process()
