@@ -11,11 +11,12 @@ import (
 // Ports gathers information about the serial ports present on a system,
 // making use of information provided by the SetupDi* functions.
 // The resulting list is sorted in the following order:
-//	- PL2303 devices
-//	- FTDIBUS devices
-//	- USB devices
-//	- ACPI devices
-//	- other devices
+//   - PL2303 devices
+//   - FTDIBUS devices
+//   - USB devices
+//   - ACPI devices
+//   - other devices
+//
 // Line printer devices (LPT...) will be skipped.
 func Ports() (ports []*PortInfo) {
 	walkDevices(func(name string, di *setupapi.DevinfoSet) (match bool) {

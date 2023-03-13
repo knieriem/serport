@@ -16,10 +16,10 @@ import (
 // information like VID, PID will be extracted.
 // The resulting list containing one item for each serial port is sorted
 // in the following order:
-//	- PL2303 devices
-//	- USB devices
-//	- ACM devices
-//	- other devices
+//   - PL2303 devices
+//   - USB devices
+//   - ACM devices
+//   - other devices
 func Ports() (ports []*PortInfo) {
 	f, err := os.Open("/sys/class/tty")
 	if err != nil {
