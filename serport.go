@@ -23,7 +23,7 @@ type Port interface {
 
 	SendBreak(time.Duration) error
 
-	Delay(ms int)
+	Delay(time.Duration)
 
 	// If the Port is remote, after calling Record() the execution of
 	// commands will be delayed until Commit() is called.
@@ -195,7 +195,7 @@ var stdNamespace = &ctlNamespace{
 			if err != nil {
 				return err
 			}
-			p.Delay(n)
+			p.Delay(time.Duration(n) * time.Millisecond)
 			return nil
 		case 'W':
 			err := d.updateCtlNow()
@@ -223,9 +223,9 @@ var stdNamespace = &ctlNamespace{
 	charCmds: "p",
 }
 
-func (d *dev) Delay(ms int) {
+func (d *dev) Delay(duration time.Duration) {
 	d.Drain()
-	time.Sleep(time.Duration(ms) * time.Millisecond)
+	time.Sleep(duration)
 }
 
 func (d *dev) Record() {

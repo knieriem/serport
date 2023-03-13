@@ -113,8 +113,8 @@ func (d *fdev) Drain() error {
 func (d *fdev) Purge(in, out bool) {
 }
 
-func (d *fdev) Delay(ms int) {
-	d.cmdi('D', ms)
+func (d *fdev) Delay(duration time.Duration) {
+	d.cmdi('D', int((duration + time.Millisecond - 1).Milliseconds()))
 }
 
 func (d *fdev) Record() {
