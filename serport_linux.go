@@ -25,6 +25,9 @@ type hw struct {
 	closeC      chan<- struct{}
 	sync.RWMutex
 	reading bool
+
+	rtsConfigured bool
+	dtrConfigured bool
 }
 
 // Open a local serial port.
@@ -210,6 +213,7 @@ func (d *dev) SetStopbits(n int) (err error) {
 
 func (d *dev) SetRts(on bool) error {
 	d.rts = on
+	d.rtsConfigured = true
 	if on {
 		return d.commfn("set rts", unix.TIOCMBIS, unix.TIOCM_RTS)
 	}
@@ -217,6 +221,7 @@ func (d *dev) SetRts(on bool) error {
 }
 func (d *dev) SetDtr(on bool) error {
 	d.dtr = on
+	d.dtrConfigured = true
 	if on {
 		return d.commfn("set dtr", unix.TIOCMBIS, unix.TIOCM_DTR)
 	}
@@ -258,8 +263,12 @@ func (d *dev) updateCtl() (err error) {
 
 		// It seems changing parameters also resets DTR/RTS lines;
 		// put in the previously requested states again:
-		d.SetRts(d.rts)
-		d.SetDtr(d.dtr)
+		if d.rtsConfigured {
+			d.SetRts(d.rts)
+		}
+		if d.dtrConfigured {
+			d.SetDtr(d.dtr)
+		}
 	}
 	return
 }
