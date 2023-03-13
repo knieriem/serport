@@ -15,12 +15,10 @@ import (
 
 type hw struct {
 	*os.File
-	inCtl       bool
 	t           *unix.Termios
 	tsav, tOrig unix.Termios
 	serOrig     *sys.Serial
 	rs485       rs485State
-	closing     bool
 	rdpoll      *epoll.Pollster
 	closeC      chan<- struct{}
 	sync.RWMutex
