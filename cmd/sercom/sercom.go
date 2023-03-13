@@ -20,9 +20,10 @@ import (
 	"github.com/knieriem/g/netutil"
 	"github.com/knieriem/serport"
 	"github.com/knieriem/serport/encoding"
+	serial "github.com/knieriem/serport/interp"
 	"github.com/knieriem/serport/serenum"
 	"github.com/knieriem/serport/serial9p"
-	"github.com/knieriem/text/cmdline"
+	"github.com/knieriem/text/interp"
 	"github.com/knieriem/text/rc"
 	"github.com/lionkov/go9p/p"
 	"github.com/lionkov/go9p/p/srv"
@@ -165,10 +166,9 @@ func main() {
 
 		setupTrace()
 		if *cmdLine {
-			cl := cmdline.NewCmdLine(bufio.NewScanner(os.Stdin), map[string]cmdline.Cmd{})
+			cl := interp.NewCmdInterp(bufio.NewScanner(os.Stdin), serial.NewCmdMap(port, nil))
 			cl.Prompt = "% "
 			cl.Stdout = os.Stdout
-			cl.ConsoleOut = os.Stdout
 			cl.Errf = func(format string, args ...interface{}) {
 				fmt.Printf(format, args...)
 			}
