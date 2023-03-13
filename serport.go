@@ -21,7 +21,7 @@ type Port interface {
 
 	SetLowLatency(bool) error
 
-	SendBreak(ms int) error
+	SendBreak(time.Duration) error
 
 	Delay(ms int)
 
@@ -209,7 +209,7 @@ var stdNamespace = &ctlNamespace{
 		case 'l':
 			return p.SetWordlen(n)
 		case 'k':
-			return p.SendBreak(n)
+			return p.SendBreak(time.Duration(n) * time.Millisecond)
 		case 'p':
 			return p.SetParity(c)
 		case 's':

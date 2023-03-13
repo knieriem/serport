@@ -289,7 +289,7 @@ func (d *dev) updateCtl() (err error) {
 	return
 }
 
-func (p *dev) SendBreak(ms int) error {
+func (p *dev) SendBreak(time.Duration) error {
 	return p.errorf("send-break", "not implemented")
 }
 

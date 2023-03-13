@@ -264,13 +264,13 @@ func (d *dev) updateCtl() (err error) {
 	return
 }
 
-func (d *dev) SendBreak(ms int) error {
+func (d *dev) SendBreak(duration time.Duration) error {
 	fd := d.fd()
 	if err := plainIoctl(fd, unix.TIOCSBRK); err != nil {
 		plainIoctl(fd, unix.TIOCCBRK)
 		return err
 	}
-	time.Sleep(time.Duration(ms) * time.Millisecond)
+	time.Sleep(duration)
 	return plainIoctl(fd, unix.TIOCCBRK)
 }
 

@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/knieriem/g/go9p/user"
 	"github.com/knieriem/serport"
@@ -169,8 +170,8 @@ func (d *fdev) SetRtsCts(on bool) error {
 	return d.cmdbool('m', on)
 }
 
-func (d *fdev) SendBreak(ms int) error {
-	return d.cmdi('D', ms)
+func (d *fdev) SendBreak(duration time.Duration) error {
+	return d.cmdi('D', int((duration + time.Millisecond - 1).Milliseconds()))
 }
 
 func (d *fdev) cmd(c string) (err error) {
