@@ -274,7 +274,11 @@ func openport(portSpec string) (port serport.Port, err error) {
 		port, err = serial9p.OpenFsDev(dev)
 	} else {
 		var name string
-		port, name, err = serport.Choose(dev, "")
+		name, err = serport.Choose(dev)
+		if err != nil {
+			return
+		}
+		port, err = serport.Open(name, "")
 		if err != nil {
 			return
 		}

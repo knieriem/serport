@@ -13,32 +13,51 @@ import (
 	"github.com/knieriem/serport/serenum"
 )
 
-// Choose tries to get the name of a serial port by evaluating expr. On
-// success it opens and returns the port, otherwise it returns an error.
-// If expr does not equal one of the values "", "?" and "!", and does not
-// start with "~", it is directly used as a port name. In the other cases, the
-// system is queried for available ports. If necessary, and if os.Stdin is
-// connected to a terminal, the user is prompted to select a port from
-// the list, or to enter a port name if the list is empty.
-func Choose(expr string, inictl string) (port Port, name string, err error) {
+// Choose looks up serial ports available on a system,
+// and selects one port depending on the value of expr.
+// On success it returns the name of the port device found,
+// which can be used in a subsequent call to [Open];
+// otherwise it returns an error.
+//
+// When evaluating expr, the following rules apply:
+//
+//   - expr equals "":
+//     The system is queried for available ports.
+//     If only one port is found, its name is returned.
+//     Otherwise the user is prompted to select from a list,
+//     or, if no port could be found, to enter a port name.
+//
+//   - expr equals "?":
+//     Like "", except that also in case only one port could be found,
+//     the user is prompted to select from a list.
+//
+//   - expr equals "!":
+//     Like "", except that if more than one port have been found,
+//     the name of the first one is returned; no prompt is displayed in that case.
+//
+//   - expr starts with '~':
+//     The system is queried for available ports.
+//     If one or more ports have been found, the
+//     part of expr following the ~ is used as a regular expression
+//     on port names, device description, and serial number.
+//     The name of the first matching port is returned.
+//     In case there is no match, an error is returned.
+//
+//   - default: expr is returned unchanged
+//
+// Note that, in the above cases, if the user needs to be prompted,
+// this is done only if [os.Stdin] is connected to a terminal;
+// otherwise an error is returned.
+func Choose(expr string) (name string, err error) {
 	switch expr {
 	case "", "?", "!":
-		name, err = choosePort(expr)
-		if err != nil {
-			return
-		}
+		return choosePort(expr)
 	default:
 		if strings.HasPrefix(expr, "~") {
-			name, err = matchDevice(expr[1:])
-			if err != nil {
-				return
-			}
-		} else {
-			name = expr
+			return matchDevice(expr[1:])
 		}
 	}
-	port, err = Open(name, inictl)
-	return
+	return expr, nil
 }
 
 func matchDevice(expr string) (name string, err error) {
