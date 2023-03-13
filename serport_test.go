@@ -3,9 +3,9 @@ package serport
 import "testing"
 
 var mergeData = [][]string{
-	[]string{"r0 D0 r1", "b115200 l8 pn r0 s1 D0 r1"},
-	[]string{"r0 W0 b38400", "b115200 l8 pn r0 s1 W0 b38400"},
-	[]string{"b38400 D0 r0", "b38400 l8 pn r1 s1 D0 r0"},
+	[]string{"pe D0 po", "b115200 l8 pe s1 D0 po"},
+	[]string{"pe W0 b38400", "b115200 l8 pe s1 W0 b38400"},
+	[]string{"b38400 D0 pe", "b38400 l8 pn s1 D0 pe"},
 }
 
 func TestMergeWithDefault(t *testing.T) {

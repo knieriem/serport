@@ -6,8 +6,8 @@ and Windows.  Its sub-package *serenum* helps finding serial ports on
 a system.
 
 In the following example a serial port is selected and opened by
-`serport.Choose`, using 115200 baud, and obeying CTS (RTS gets activated
-per default). If there is more than one serial port present on a system,
+`serport.Choose`, using 115200 baud, and obeying CTS.
+If there is more than one serial port present on a system,
 `Choose` will display a list of ports it has found and ask the user
 to select one. If there is only one serial port present on a system,
 `Choose` will try to use this port directly.
@@ -22,7 +22,7 @@ to select one. If there is only one serial port present on a system,
 	)
 	
 	func main() {
-		conf := serport.MergeCtlCmds(serport.StdConf, "b115200 m1")
+		conf := serport.MergeCtlCmds(serport.StdConf, "b115200 r1 m1")
 		port, name, err := serport.Choose("", conf)
 		if err != nil {
 			log.Fatal(err)

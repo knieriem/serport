@@ -53,7 +53,7 @@ type dev struct {
 const (
 	// StdConf specifies a port configuration that may be used
 	// as inictl argument to [Open].
-	StdConf = "b115200 l8 pn r1 s1"
+	StdConf = "b115200 l8 pn s1"
 )
 
 // MergeCtlCmds concatenates control cmd strings, skipping commands
