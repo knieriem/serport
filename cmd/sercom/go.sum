@@ -4,8 +4,8 @@ github.com/knieriem/g v0.1.2/go.mod h1:zYg1CmnYJBZ34OwOIRIqoBsvVxbGRjgE4kLQrHz7D
 github.com/knieriem/g v0.4.0 h1:Ezf2fUkMMEYeh7Hk2FdzV3VzEbOeuRlWSUWPf9Vrocs=
 github.com/knieriem/g v0.4.0/go.mod h1:/Jo8tnfB2j/yQQCwkBbN0sZ2ekRtc9cXYiF4mAbiLAc=
 github.com/knieriem/serport v0.2.0/go.mod h1:RDA6f7Ja0aTeLlYhmfE86dpRDn6+9K5bsz17lHjjgvc=
-github.com/knieriem/serport v0.3.0 h1:O12jAADg/nuL+lR6qYvfsDaoH5ZPCK+bom03rdZv8G0=
-github.com/knieriem/serport v0.3.0/go.mod h1:pDq8MUDNRxx7yx1MSahik8hgfS1pg/KHtAHMNTYMk2A=
+github.com/knieriem/serport v0.4.0-alpha1 h1:lYWpWFsbXxDIBgbBYx4tiw1RgaEdfB1l8DFsmdc6To0=
+github.com/knieriem/serport v0.4.0-alpha1/go.mod h1:pDq8MUDNRxx7yx1MSahik8hgfS1pg/KHtAHMNTYMk2A=
 github.com/knieriem/serport/interp v0.1.0 h1:O7IByMikLQxInU2Nrv87+XK+fRytetIEqdw6MrMoHWU=
 github.com/knieriem/serport/interp v0.1.0/go.mod h1:8mQFYtICEZ+0aVTIKBWC3hgc3eH9aKiJpil3TTJD4uU=
 github.com/knieriem/text v0.6.0/go.mod h1:nFN1r4dWMNr3tq/iqPWvNubGBcVSV41vH7D5lF0FzUs=
