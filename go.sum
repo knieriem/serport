@@ -2,5 +2,6 @@ github.com/knieriem/g v0.4.0 h1:Ezf2fUkMMEYeh7Hk2FdzV3VzEbOeuRlWSUWPf9Vrocs=
 github.com/knieriem/g v0.4.0/go.mod h1:/Jo8tnfB2j/yQQCwkBbN0sZ2ekRtc9cXYiF4mAbiLAc=
 github.com/lionkov/go9p v0.0.0-20180620135904-0a603dd6808a h1:5dYGzewut3Sp6+B7QFKioGh9+BovMF02FLDWja1Qbzo=
 github.com/lionkov/go9p v0.0.0-20180620135904-0a603dd6808a/go.mod h1:Nbrxd4FljESFB/bUvzT5xm1VNO2VfzMKSIv4L++4J4U=
-golang.org/x/sys v0.0.0-20210514084401-e8d321eab015 h1:hZR0X1kPW+nwyJ9xRxqZk1vx5RUObAPBdKVvXPDUH/E=
 golang.org/x/sys v0.0.0-20210514084401-e8d321eab015/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.1.0 h1:kunALQeHf1/185U1i0GOB/fy1IPRDDpuoOOqRReG57U=
+golang.org/x/sys v0.1.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
