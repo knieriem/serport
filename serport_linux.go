@@ -1,16 +1,16 @@
 package serport
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
-	"sync"
+	"syscall"
 	"time"
 
 	"golang.org/x/sys/unix"
 
 	sys "github.com/knieriem/g/syscall"
-	"github.com/knieriem/g/syscall/epoll"
 )
 
 type hw struct {
@@ -19,10 +19,7 @@ type hw struct {
 	tsav, tOrig unix.Termios
 	serOrig     *sys.Serial
 	rs485       rs485State
-	rdpoll      *epoll.Pollster
-	closeC      chan<- struct{}
-	sync.RWMutex
-	reading bool
+	sc          syscall.RawConn
 
 	rtsConfigured bool
 	dtrConfigured bool
@@ -43,19 +40,21 @@ func Open(filename string, inictl string) (port Port, err error) {
 	d.name = filename
 	d.encaps = d
 
-	fd := d.fd()
-	t, err := unix.IoctlGetTermios(fd, unix.TCGETS)
+	d.hw.sc, err = file.SyscallConn()
 	if err != nil {
-		err = d.error("get term attr", err)
-		goto fail
+		return nil, err
 	}
-	err = plainIoctl(fd, unix.TIOCEXCL)
+
+	var t *unix.Termios
+	err = d.control(func(fd int) error {
+		t, err = unix.IoctlGetTermios(fd, unix.TCGETS)
+		if err != nil {
+			err = d.error("get term attr", err)
+			return err
+		}
+		return plainIoctl(fd, unix.TIOCEXCL)
+	})
 	if err != nil {
-		goto fail
-	}
-	err = setBlocking(file.Fd())
-	if err != nil {
-		err = d.error("set blocking", err)
 		goto fail
 	}
 
@@ -76,12 +75,6 @@ func Open(filename string, inictl string) (port Port, err error) {
 	if err = d.Ctl(inictl); err != nil {
 		goto fail
 	}
-	if d.rdpoll, err = epoll.NewPollster(); err != nil {
-		return
-	}
-	if d.rdpoll.AddFD(fd, 'r', true); err != nil {
-		return
-	}
 
 	port = d
 	return
@@ -92,62 +85,39 @@ fail:
 }
 
 func (d *dev) Read(buf []byte) (nread int, err error) {
-	d.Lock()
-	d.reading = true
-	d.Unlock()
-	defer func() {
-		d.Lock()
-		d.reading = false
-		d.Unlock()
-	}()
-	for {
-		d.RLock()
-		closeC := d.closeC
-		d.RUnlock()
-		if closeC != nil {
-			var a struct{}
-			closeC <- a
-			close(closeC)
+	n, err := d.hw.Read(buf)
+	if err != nil {
+		if errors.Is(err, os.ErrDeadlineExceeded) {
 			return 0, io.EOF
 		}
-		_, mode, err1 := d.rdpoll.WaitFD(100e6)
-		if err1 != nil {
-			err = err1
-			return
+		if errors.Is(err, os.ErrClosed) {
+			return 0, io.EOF
 		}
-		if mode == 0 {
-			// WaitFD timeout
-			continue
-		}
-		return d.hw.Read(buf)
 	}
+	return n, err
 }
 
 func (d *dev) Close() error {
-	d.Lock()
-	if d.reading {
-		c := make(chan struct{})
-		d.closeC = c
-		d.Unlock()
-		<-c
-	} else {
-		d.Unlock()
-	}
-	d.rdpoll.Close()
-	unix.IoctlSetTermios(d.fd(), unix.TCSETSW, &d.tOrig)
-	d.rs485.restore(d.fd())
-	if d.serOrig != nil {
-		sys.IoctlSetSerial(d.fd(), d.serOrig)
-	}
+	d.hw.SetReadDeadline(time.Now().Add(-time.Second))
+	d.control(func(fd int) error {
+		unix.IoctlSetTermios(fd, unix.TCSETSW, &d.tOrig)
+		d.rs485.restore(fd)
+		if d.serOrig != nil {
+			sys.IoctlSetSerial(fd, d.serOrig)
+		}
+		return nil
+	})
 	return d.hw.Close()
 }
 
-func (d *dev) Drain() (err error) {
-	err = unix.IoctlSetTermios(d.fd(), unix.TCSETSW, &d.tsav) // drain and set parameters
-	if err != nil {
-		err = d.error("drain", err)
-	}
-	return
+func (d *dev) Drain() error {
+	return d.control(func(fd int) error {
+		err := unix.IoctlSetTermios(fd, unix.TCSETSW, &d.tsav) // drain and set parameters
+		if err != nil {
+			return d.error("drain", err)
+		}
+		return nil
+	})
 }
 
 func (d *dev) Purge(in, out bool) {
@@ -227,10 +197,12 @@ func (d *dev) SetDtr(on bool) error {
 }
 
 func (d *dev) commfn(name string, cmd uint, f int) (err error) {
-	if err = unix.IoctlSetPointerInt(d.fd(), cmd, f); err != nil {
-		return d.error(name, err)
-	}
-	return
+	return d.control(func(fd int) error {
+		if err = unix.IoctlSetPointerInt(fd, cmd, f); err != nil {
+			return d.error(name, err)
+		}
+		return nil
+	})
 }
 
 func (d *dev) SetRtsCts(on bool) error {
@@ -256,29 +228,41 @@ func (d *dev) updateCtl() (err error) {
 		t.Cc[unix.VMIN] == tsav.Cc[unix.VMIN] {
 		return
 	}
-	if err = unix.IoctlSetTermios(d.fd(), unix.TCSETSW, t); err == nil { // drain and set parameters
-		d.tsav = *t
 
-		// It seems changing parameters also resets DTR/RTS lines;
-		// put in the previously requested states again:
-		if d.rtsConfigured {
-			d.SetRts(d.rts)
-		}
-		if d.dtrConfigured {
-			d.SetDtr(d.dtr)
-		}
+	err = d.control(func(fd int) error {
+		// drain and set parameters
+		return unix.IoctlSetTermios(fd, unix.TCSETSW, t)
+	})
+	if err != nil {
+		return err
+	}
+
+	d.tsav = *t
+
+	// It seems changing parameters also resets DTR/RTS lines;
+	// put in the previously requested states again:
+	if d.rtsConfigured {
+		d.SetRts(d.rts)
+	}
+	if d.dtrConfigured {
+		d.SetDtr(d.dtr)
 	}
 	return
 }
 
 func (d *dev) SendBreak(duration time.Duration) error {
-	fd := d.fd()
-	if err := plainIoctl(fd, unix.TIOCSBRK); err != nil {
-		plainIoctl(fd, unix.TIOCCBRK)
+	if err := d.control(func(fd int) error {
+		if err := plainIoctl(fd, unix.TIOCSBRK); err != nil {
+			plainIoctl(fd, unix.TIOCCBRK)
+			return err
+		}
+		return nil
+	}); err != nil {
 		return err
 	}
+
 	time.Sleep(duration)
-	return plainIoctl(fd, unix.TIOCCBRK)
+	return d.plainIoctl(unix.TIOCCBRK)
 }
 
 func (d *dev) ModemLines() LineState {
@@ -319,14 +303,10 @@ var speedMap = map[int]int{
 	4000000: unix.B4000000,
 }
 
-func setBlocking(fd uintptr) (err error) {
-	var flags int
-
-	flags, err = unix.FcntlInt(fd, unix.F_GETFL, 0)
-	if err == nil {
-		_, err = unix.FcntlInt(fd, unix.F_SETFL, flags&^unix.O_NONBLOCK)
-	}
-	return
+func (d *dev) plainIoctl(req uint) error {
+	return d.control(func(fd int) error {
+		return unix.IoctlSetInt(fd, req, 0)
+	})
 }
 
 func plainIoctl(fd int, req uint) error {
@@ -334,23 +314,23 @@ func plainIoctl(fd int, req uint) error {
 }
 
 func (d *dev) SetLowLatency(low bool) error {
-	d.Lock()
-	defer d.Unlock()
+	return d.control(func(fd int) error {
 
-	ser, err := sys.IoctlGetSerial(d.fd())
-	if err != nil {
-		return err
-	}
-	if d.serOrig == nil {
-		orig := *ser
-		d.serOrig = &orig
-	}
-	if low {
-		ser.Flags |= sys.ASYNC_LOW_LATENCY
-	} else {
-		ser.Flags &^= sys.ASYNC_LOW_LATENCY
-	}
-	return sys.IoctlSetSerial(d.fd(), ser)
+		ser, err := sys.IoctlGetSerial(fd)
+		if err != nil {
+			return err
+		}
+		if d.serOrig == nil {
+			orig := *ser
+			d.serOrig = &orig
+		}
+		if low {
+			ser.Flags |= sys.ASYNC_LOW_LATENCY
+		} else {
+			ser.Flags &^= sys.ASYNC_LOW_LATENCY
+		}
+		return sys.IoctlSetSerial(fd, ser)
+	})
 }
 
 func init() {
@@ -360,7 +340,9 @@ func init() {
 var rs485CtlNamespace = &ctlNamespace{
 	runCmd: func(d *dev, cmd, c byte, n int) error {
 		st := &d.rs485
-		err := st.initlazy(d.fd())
+		err := d.control(func(fd int) error {
+			return st.initlazy(fd)
+		})
 		if err != nil {
 			return fmt.Errorf("rs485: %w", err)
 		}
@@ -383,12 +365,25 @@ var rs485CtlNamespace = &ctlNamespace{
 		return nil
 	},
 	updateDrv: func(d *dev) error {
-		err := d.rs485.set(d.fd())
+		err := d.control(func(fd int) error {
+			return d.rs485.set(fd)
+		})
 		if err != nil {
 			return fmt.Errorf("rs485: %w", err)
 		}
 		return nil
 	},
+}
+
+func (d *dev) control(f func(fd int) error) error {
+	var err error
+	err1 := d.sc.Control(func(fd uintptr) {
+		err = f(int(fd))
+	})
+	if err1 != nil {
+		return err1
+	}
+	return err
 }
 
 type rs485State struct {
@@ -429,8 +424,4 @@ func (st *rs485State) restore(fd int) error {
 		return nil
 	}
 	return sys.IoctlSetSerialRS485(fd, st.orig)
-}
-
-func (d *dev) fd() int {
-	return int(d.hw.File.Fd())
 }
