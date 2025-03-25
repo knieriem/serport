@@ -167,7 +167,7 @@ func (d *dev) SetParity(parity byte) error {
 	return d.updateCtl()
 }
 
-func (d *dev) SetStopbits(n int) (err error) {
+func (d *dev) SetStopbits(n int) error {
 	switch n {
 	case 1:
 		d.t.Cflag &^= unix.CSTOPB
@@ -196,9 +196,9 @@ func (d *dev) SetDtr(on bool) error {
 	return d.commfn("clr dtr", unix.TIOCMBIC, unix.TIOCM_DTR)
 }
 
-func (d *dev) commfn(name string, cmd uint, f int) (err error) {
+func (d *dev) commfn(name string, cmd uint, f int) error {
 	return d.control(func(fd int) error {
-		if err = unix.IoctlSetPointerInt(fd, cmd, f); err != nil {
+		if err := unix.IoctlSetPointerInt(fd, cmd, f); err != nil {
 			return d.error(name, err)
 		}
 		return nil
@@ -215,9 +215,9 @@ func (d *dev) SetRtsCts(on bool) error {
 	return d.updateCtl()
 }
 
-func (d *dev) updateCtl() (err error) {
+func (d *dev) updateCtl() error {
 	if d.inCtl {
-		return
+		return nil
 	}
 	t := d.t
 	tsav := &d.tsav
@@ -226,10 +226,10 @@ func (d *dev) updateCtl() (err error) {
 		t.Oflag == tsav.Oflag &&
 		t.Cc[unix.VTIME] == tsav.Cc[unix.VTIME] &&
 		t.Cc[unix.VMIN] == tsav.Cc[unix.VMIN] {
-		return
+		return nil
 	}
 
-	err = d.control(func(fd int) error {
+	err := d.control(func(fd int) error {
 		// drain and set parameters
 		return unix.IoctlSetTermios(fd, unix.TCSETSW, t)
 	})
@@ -247,7 +247,7 @@ func (d *dev) updateCtl() (err error) {
 	if d.dtrConfigured {
 		d.SetDtr(d.dtr)
 	}
-	return
+	return nil
 }
 
 func (d *dev) SendBreak(duration time.Duration) error {

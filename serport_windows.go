@@ -136,7 +136,7 @@ func (p *dev) Write(buf []byte) (int, error) {
 	return int(done), nil
 }
 
-func (d *dev) Close() (err error) {
+func (d *dev) Close() error {
 	d.closing = true
 	d.Lock()
 	defer d.Unlock()
@@ -144,16 +144,16 @@ func (d *dev) Close() (err error) {
 	syscall.CloseHandle(d.ev.r)
 	syscall.CloseHandle(d.ev.w)
 	if e := syscall.CloseHandle(d.fd); e != nil {
-		err = d.error("close", e)
+		return d.error("close", e)
 	}
 	return nil
 }
 
-func (d *dev) Drain() (err error) {
+func (d *dev) Drain() error {
 	if e := win.FlushFileBuffers(d.fd); e != nil {
-		err = d.error("drain", e)
+		return d.error("drain", e)
 	}
-	return
+	return nil
 }
 
 func (d *dev) Purge(in, out bool) {
@@ -198,17 +198,17 @@ func (d *dev) SetStopbits(n int) error {
 	return d.updateCtl()
 }
 
-func (d *dev) SetRts(on bool) (err error) {
+func (d *dev) SetRts(on bool) error {
 	d.rts = on
 	if d.rtsHandshake {
 		// Modifying RTS line state via EscapeCommFunction
 		// would result in an error "The parameter is incorrect",
 		// if RTS_CONTROL_HANDSHAKE is active
-		return
+		return nil
 	}
 	setRtsFlags(&d.dcb, on)
 	if !d.initDone {
-		return
+		return nil
 	}
 	setRtsFlags(&d.dcbsav, on) // fake
 	if on {
@@ -217,11 +217,11 @@ func (d *dev) SetRts(on bool) (err error) {
 	return d.commfn("clr rts", win.CLRRTS)
 }
 
-func (d *dev) SetDtr(on bool) (err error) {
+func (d *dev) SetDtr(on bool) error {
 	d.dtr = on
 	setDtrFlags(&d.dcb, on)
 	if !d.initDone {
-		return
+		return nil
 	}
 	setDtrFlags(&d.dcbsav, on) // fake
 	if on {
@@ -230,11 +230,11 @@ func (d *dev) SetDtr(on bool) (err error) {
 	return d.commfn("clr dtr", win.CLRDTR)
 }
 
-func (d *dev) commfn(name string, f int) (err error) {
+func (d *dev) commfn(name string, f int) error {
 	if e := win.EscapeCommFunction(d.fd, uint32(f)); e != nil {
 		return d.error(name, e)
 	}
-	return
+	return nil
 }
 
 func (d *dev) SetRtsCts(on bool) error {
@@ -269,9 +269,9 @@ func setDtrFlags(dcb *win.DCB, on bool) {
 	}
 }
 
-func (d *dev) updateCtl() (err error) {
+func (d *dev) updateCtl() error {
 	if d.inCtl {
-		return
+		return nil
 	}
 	sav := &d.dcbsav
 	dcb := &d.dcb
@@ -279,15 +279,15 @@ func (d *dev) updateCtl() (err error) {
 		dcb.ByteSize == sav.ByteSize &&
 		dcb.Parity == sav.Parity &&
 		dcb.StopBits == sav.StopBits {
-		return
+		return nil
 	}
 	d.Drain()
 	if e := win.SetCommState(d.fd, &d.dcb); e != nil {
-		err = d.error("setdcb", e)
-	} else {
-		d.dcbsav = d.dcb
+		return d.error("setdcb", e)
 	}
-	return
+	d.dcbsav = d.dcb
+
+	return nil
 }
 
 func (p *dev) SendBreak(time.Duration) error {

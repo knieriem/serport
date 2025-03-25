@@ -127,16 +127,16 @@ func (d *fdev) Commit() {
 	d.cmd("}")
 }
 
-func (d *fdev) Ctl(cmds ...string) (err error) {
+func (d *fdev) Ctl(cmds ...string) error {
 	for _, s := range cmds {
-		if err = d.cmd(s); err != nil {
-			break
+		if err := d.cmd(s); err != nil {
+			return err
 		}
 	}
-	return
+	return nil
 }
 
-func (d *fdev) SetBaudrate(val int) (err error) {
+func (d *fdev) SetBaudrate(val int) error {
 	return d.cmdi('b', val)
 }
 
@@ -148,7 +148,7 @@ func (d *fdev) SetParity(parity byte) error {
 	return d.cmd("p" + string(parity))
 }
 
-func (d *fdev) SetStopbits(n int) (err error) {
+func (d *fdev) SetStopbits(n int) error {
 	if n == 1 || n == 2 {
 		return d.cmdi('s', n)
 	}
@@ -174,21 +174,21 @@ func (d *fdev) SendBreak(duration time.Duration) error {
 	return d.cmdi('D', int((duration + time.Millisecond - 1).Milliseconds()))
 }
 
-func (d *fdev) cmd(c string) (err error) {
-	_, err = d.ctl.Write([]byte(c))
+func (d *fdev) cmd(c string) error {
+	_, err := d.ctl.Write([]byte(c))
 	return err
 }
 
-func (d *fdev) cmdbool(c byte, on bool) (err error) {
+func (d *fdev) cmdbool(c byte, on bool) error {
 	var msg = []byte{c, '0', c, '1'}
 
 	if on {
 		msg = msg[2:]
 	}
-	_, err = d.ctl.Write(msg[:2])
-	return
+	_, err := d.ctl.Write(msg[:2])
+	return err
 }
 
-func (d *fdev) cmdi(c byte, val int) (err error) {
+func (d *fdev) cmdi(c byte, val int) error {
 	return d.cmd(string(c) + strconv.Itoa(val))
 }

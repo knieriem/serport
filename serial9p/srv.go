@@ -114,12 +114,12 @@ func (d *data) Clunk(f *srv.FFid) error {
 
 // Link ctl and data files (that wrap a previously opened
 // serial port) into an existing 9P file tree `dir'.
-func RegisterFiles9P(dir *srv.File, dev serport.Port, user p.User) (err error) {
+func RegisterFiles9P(dir *srv.File, dev serport.Port, user p.User) error {
 	c := new(ctl)
 	c.dev = dev
-	err = c.Add(dir, "ctl", user, nil, 0666, c)
+	err := c.Add(dir, "ctl", user, nil, 0666, c)
 	if err != nil {
-		return
+		return err
 	}
 
 	d := new(data)
@@ -127,7 +127,5 @@ func RegisterFiles9P(dir *srv.File, dev serport.Port, user p.User) (err error) {
 	d.rch = ioutil.ChannelizeReader(dev, nil)
 	d.unblockch = make(chan bool)
 	c.dataUnblockch = d.unblockch
-	err = d.Add(dir, "data", user, nil, 0666, d)
-
-	return
+	return d.Add(dir, "data", user, nil, 0666, d)
 }
