@@ -3,6 +3,7 @@ package serport
 import "testing"
 
 var mergeData = [][]string{
+	{"pe po", "b115200 l8 po s1"},
 	{"pe D0 po", "b115200 l8 pe s1 D0 po"},
 	{"pe W0 b38400", "b115200 l8 pe s1 W0 b38400"},
 	{"b38400 D0 pe", "b38400 l8 pn s1 D0 pe"},
