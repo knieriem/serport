@@ -388,7 +388,6 @@ func (d *dev) control(f func(fd int) error) error {
 
 type rs485State struct {
 	cur  *sys.SerialRS485
-	sav  sys.SerialRS485
 	orig *sys.SerialRS485
 }
 
